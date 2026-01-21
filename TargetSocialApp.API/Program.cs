@@ -62,7 +62,9 @@ namespace TargetSocialApp.API
             // -----------------------------
             // 8️⃣ HTTP Request Pipeline
             // -----------------------------
-        
+            var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+            app.Urls.Add($"http://*:{port}");
+
             app.UseSwagger();
             app.UseSwaggerUI();
             

@@ -1,9 +1,9 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using TargetSocialApp.Application.Common.Interfaces;
 using TargetSocialApp.Infrastructure.Persistence;
 using TargetSocialApp.Infrastructure.Persistence.Repositories;
-using TargetSocialApp.Application.Common.Interfaces;
 
 namespace TargetSocialApp.Infrastructure
 {
@@ -11,10 +11,15 @@ namespace TargetSocialApp.Infrastructure
     {
         public static IServiceCollection AddInfrastructureDependencies(this IServiceCollection services, IConfiguration configuration)
         {
+            // 1️⃣ اقرأ من Environment Variable أولًا
+            var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
+                                   ?? configuration.GetConnectionString("DefaultConnection");
+
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+                options.UseNpgsql(connectionString)
                        .UseLazyLoadingProxies());
 
+            // 2️⃣ Services
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddTransient<IUnitOfWork, UnitOfWork>();
 

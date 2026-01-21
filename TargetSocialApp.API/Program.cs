@@ -1,6 +1,6 @@
-
-using TargetSocialApp.Application;
+﻿using TargetSocialApp.Application;
 using TargetSocialApp.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 
 namespace TargetSocialApp.API
 {
@@ -10,38 +10,58 @@ namespace TargetSocialApp.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // -----------------------------
+            // 1️⃣ Connection String Setup
+            // -----------------------------
+            // يقرأ من Environment Variable أولًا
+            var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
+                                   ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
-            // 1. Layer Dependencies
+            // -----------------------------
+            // 2️⃣ Layer Dependencies
+            // -----------------------------
             builder.Services.AddInfrastructureDependencies(builder.Configuration);
             builder.Services.AddApplicationDependencies();
 
-            // 2. Controllers
+            // -----------------------------
+            // 3️⃣ Controllers
+            // -----------------------------
             builder.Services.AddControllers();
 
-            // 3. Swagger
+            // -----------------------------
+            // 4️⃣ Swagger
+            // -----------------------------
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            // 4. CORS
+            // -----------------------------
+            // 5️⃣ CORS
+            // -----------------------------
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll",
-                    builder =>
-                    {
-                        builder.AllowAnyOrigin()
-                               .AllowAnyMethod()
-                               .AllowAnyHeader();
-                    });
+                options.AddPolicy("AllowAll", builder =>
+                {
+                    builder.AllowAnyOrigin()
+                           .AllowAnyMethod()
+                           .AllowAnyHeader();
+                });
             });
 
-            // 5. SignalR
+            // -----------------------------
+            // 6️⃣ SignalR
+            // -----------------------------
             builder.Services.AddSignalR();
-            builder.Services.AddTransient<TargetSocialApp.Application.Common.Interfaces.IChatNotifier, TargetSocialApp.API.Services.ChatNotifier>();
+            builder.Services.AddTransient<TargetSocialApp.Application.Common.Interfaces.IChatNotifier,
+                                          TargetSocialApp.API.Services.ChatNotifier>();
 
+            // -----------------------------
+            // 7️⃣ Build App
+            // -----------------------------
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // -----------------------------
+            // 8️⃣ HTTP Request Pipeline
+            // -----------------------------
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -49,9 +69,7 @@ namespace TargetSocialApp.API
             }
 
             app.UseHttpsRedirection();
-
             app.UseCors("AllowAll");
-
             app.UseAuthorization();
 
             app.MapControllers();

@@ -62,11 +62,10 @@ namespace TargetSocialApp.API
             // -----------------------------
             // 8️⃣ HTTP Request Pipeline
             // -----------------------------
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+        
+            app.UseSwagger();
+            app.UseSwaggerUI();
+            
 
             app.UseHttpsRedirection();
             app.UseCors("AllowAll");

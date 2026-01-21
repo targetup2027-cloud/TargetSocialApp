@@ -12,12 +12,21 @@ namespace TargetSocialApp.Infrastructure
         public static IServiceCollection AddInfrastructureDependencies(this IServiceCollection services, IConfiguration configuration)
         {
             // 1️⃣ اقرأ من Environment Variable أولًا
-            var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
-                                   ?? configuration.GetConnectionString("DefaultConnection");
+         var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") 
+                       ?? configuration.GetConnectionString("DefaultConnection");
 
+        try
+        {
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(connectionString)
                        .UseLazyLoadingProxies());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error connecting to database: " + ex.Message);
+            throw;
+        }
+
 
             // 2️⃣ Services
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));

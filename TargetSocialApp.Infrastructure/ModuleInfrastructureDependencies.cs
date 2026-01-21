@@ -12,7 +12,7 @@ namespace TargetSocialApp.Infrastructure
         public static IServiceCollection AddInfrastructureDependencies(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+                options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
                        .UseLazyLoadingProxies());
 
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));

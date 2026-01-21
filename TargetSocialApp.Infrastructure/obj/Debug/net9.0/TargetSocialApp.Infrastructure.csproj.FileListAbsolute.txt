@@ -17,3 +17,4 @@ C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Infrastructure\obj\D
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Infrastructure\obj\Debug\net9.0\TargetSocialApp.Infrastructure.pdb
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Infrastructure\obj\Debug\net9.0\TargetSocialApp.Infrastructure.genruntimeconfig.cache
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Infrastructure\obj\Debug\net9.0\ref\TargetSocialApp.Infrastructure.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Infrastructure\obj\Debug\net9.0\TargetSocialApp.Infrastructure.sourcelink.json

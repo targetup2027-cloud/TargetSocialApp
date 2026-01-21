@@ -13,3 +13,4 @@ C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Application\obj\Debu
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Application\obj\Debug\net9.0\refint\TargetSocialApp.Application.dll
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Application\obj\Debug\net9.0\TargetSocialApp.Application.pdb
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Application\obj\Debug\net9.0\ref\TargetSocialApp.Application.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Application\obj\Debug\net9.0\TargetSocialApp.Application.sourcelink.json

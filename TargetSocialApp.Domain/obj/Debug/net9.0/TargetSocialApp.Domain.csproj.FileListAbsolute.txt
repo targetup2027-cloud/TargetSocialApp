@@ -10,3 +10,4 @@ C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Domain\obj\Debug\net
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Domain\obj\Debug\net9.0\refint\TargetSocialApp.Domain.dll
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Domain\obj\Debug\net9.0\TargetSocialApp.Domain.pdb
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Domain\obj\Debug\net9.0\ref\TargetSocialApp.Domain.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Domain\obj\Debug\net9.0\TargetSocialApp.Domain.sourcelink.json

@@ -175,7 +175,6 @@ C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\staticwebassets.build.json.cache
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\staticwebassets.development.json
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\staticwebassets.build.endpoints.json
-C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\TargetSo.16B3F1B6.Up2Date
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\TargetSocialApp.API.dll
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\refint\TargetSocialApp.API.dll
@@ -183,3 +182,7 @@ C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\TargetSocialApp.API.genruntimeconfig.cache
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\ref\TargetSocialApp.API.dll
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\Newtonsoft.Json.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\TargetSocialApp.API.sourcelink.json
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\Npgsql.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt

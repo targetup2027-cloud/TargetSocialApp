@@ -47,6 +47,12 @@ namespace TargetSocialApp.API
                 });
             });
 
+            builder.WebHost.ConfigureKestrel(serverOptions =>
+            {
+                var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+                serverOptions.ListenAnyIP(int.Parse(port));
+            });
+
             // -----------------------------
             // 6️⃣ SignalR
             // -----------------------------

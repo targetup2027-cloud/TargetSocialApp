@@ -3,8 +3,8 @@
   "WorkspaceRootPath": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|solutionrelative:targetsocialapp.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|solutionrelative:targetsocialapp.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
@@ -43,14 +43,14 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\Program.cs",
-              "RelativeDocumentMoniker": "TargetSocialApp.API\\Program.cs",
-              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\Program.cs",
-              "RelativeToolTip": "TargetSocialApp.API\\Program.cs",
-              "ViewState": "AgIAADEAAAAAAAAAAAAqwEIAAAAfAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-21T08:59:26.889Z",
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "TargetSocialApp.API\\Properties\\launchSettings.json",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\Properties\\launchSettings.json",
+              "RelativeToolTip": "TargetSocialApp.API\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAAgAAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-01-21T10:20:27.377Z",
               "EditorCaption": ""
             },
             {
@@ -61,9 +61,9 @@
               "RelativeDocumentMoniker": "TargetSocialApp.API\\appsettings.json",
               "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\appsettings.json",
               "RelativeToolTip": "TargetSocialApp.API\\appsettings.json",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-01-21T08:43:40.939Z",
+              "WhenOpened": "2026-01-21T10:20:23.175Z",
               "EditorCaption": ""
             }
           ]

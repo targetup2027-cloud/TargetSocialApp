@@ -55,6 +55,15 @@ namespace TargetSocialApp.API
             var app = builder.Build();
 
             // -----------------------------
+            // Diagnosis: Log every request
+            // -----------------------------
+            app.Use(async (context, next) =>
+            {
+                Console.WriteLine($"[Diagnosis] Request: {context.Request.Method} {context.Request.Path}");
+                await next();
+            });
+
+            // -----------------------------
             // 6️⃣ Root Health Check (مهم ل Railway)
             // -----------------------------
             app.MapGet("/", () => "TargetSocialApp API is running 🚀");

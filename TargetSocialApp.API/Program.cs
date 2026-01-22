@@ -1,6 +1,5 @@
 ﻿using TargetSocialApp.Application;
 using TargetSocialApp.Infrastructure;
-using Microsoft.EntityFrameworkCore;
 
 namespace TargetSocialApp.API
 {
@@ -11,71 +10,59 @@ namespace TargetSocialApp.API
             var builder = WebApplication.CreateBuilder(args);
 
             // -----------------------------
-            // 1️⃣ Connection String Setup
-            // -----------------------------
-            // يقرأ من Environment Variable أولًا
-            var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
-                                   ?? builder.Configuration.GetConnectionString("DefaultConnection");
-
-            // -----------------------------
-            // 2️⃣ Layer Dependencies
+            // 1️⃣ Layer Dependencies
             // -----------------------------
             builder.Services.AddInfrastructureDependencies(builder.Configuration);
             builder.Services.AddApplicationDependencies();
 
             // -----------------------------
-            // 3️⃣ Controllers
+            // 2️⃣ Controllers
             // -----------------------------
             builder.Services.AddControllers();
 
             // -----------------------------
-            // 4️⃣ Swagger
+            // 3️⃣ Swagger
             // -----------------------------
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
             // -----------------------------
-            // 5️⃣ CORS
+            // 4️⃣ CORS
             // -----------------------------
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll", builder =>
+                options.AddPolicy("AllowAll", policy =>
                 {
-                    builder.AllowAnyOrigin()
-                           .AllowAnyMethod()
-                           .AllowAnyHeader();
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
                 });
             });
 
-            builder.WebHost.ConfigureKestrel(serverOptions =>
-            {
-                var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-                serverOptions.ListenAnyIP(int.Parse(port));
-            });
-
             // -----------------------------
-            // 6️⃣ SignalR
+            // 5️⃣ SignalR
             // -----------------------------
             builder.Services.AddSignalR();
-            builder.Services.AddTransient<TargetSocialApp.Application.Common.Interfaces.IChatNotifier,
-                                          TargetSocialApp.API.Services.ChatNotifier>();
+            builder.Services.AddTransient<
+                TargetSocialApp.Application.Common.Interfaces.IChatNotifier,
+                TargetSocialApp.API.Services.ChatNotifier>();
 
-            // -----------------------------
-            // 7️⃣ Build App
-            // -----------------------------
             var app = builder.Build();
 
             // -----------------------------
-            // 8️⃣ HTTP Request Pipeline
+            // 6️⃣ Root Health Check (مهم ل Railway)
             // -----------------------------
-            var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-            app.Urls.Add($"http://*:{port}");
+            app.MapGet("/", () => "TargetSocialApp API is running 🚀");
 
+            // -----------------------------
+            // 7️⃣ Pipeline
+            // -----------------------------
             app.UseSwagger();
             app.UseSwaggerUI();
-            
 
-            app.UseHttpsRedirection();
+            // ❌ شيل HTTPS Redirection
+            // app.UseHttpsRedirection();
+
             app.UseCors("AllowAll");
             app.UseAuthorization();
 

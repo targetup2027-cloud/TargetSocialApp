@@ -10,6 +10,8 @@ namespace TargetSocialApp.API
             var builder = WebApplication.CreateBuilder(args);
 
             var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+            Console.WriteLine($"[Diagnosis] PORT env var: '{Environment.GetEnvironmentVariable("PORT")}'");
+            Console.WriteLine($"[Diagnosis] Binding to: http://0.0.0.0:{port}");
             builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
             // -----------------------------

@@ -2075,6 +2075,25 @@
         }
       }
     },
+    "/": {
+      "get": {
+        "tags": [
+          "TargetSocialApp.API"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Users/{userId}": {
       "get": {
         "tags": [

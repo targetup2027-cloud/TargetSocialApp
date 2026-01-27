@@ -3,12 +3,8 @@
   "WorkspaceRootPath": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|solutionrelative:targetsocialapp.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|solutionrelative:targetsocialapp.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Infrastructure\\Migrations\\20260127072753_initWithSeedData.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:TargetSocialApp.Infrastructure\\Migrations\\20260127072753_initWithSeedData.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -43,27 +39,14 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "launchSettings.json",
-              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\Properties\\launchSettings.json",
-              "RelativeDocumentMoniker": "TargetSocialApp.API\\Properties\\launchSettings.json",
-              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\Properties\\launchSettings.json",
-              "RelativeToolTip": "TargetSocialApp.API\\Properties\\launchSettings.json",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAAAgAAAAuAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-01-21T10:20:27.377Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\appsettings.json",
-              "RelativeDocumentMoniker": "TargetSocialApp.API\\appsettings.json",
-              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\appsettings.json",
-              "RelativeToolTip": "TargetSocialApp.API\\appsettings.json",
+              "Title": "20260127072753_initWithSeedData.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Infrastructure\\Migrations\\20260127072753_initWithSeedData.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.Infrastructure\\Migrations\\20260127072753_initWithSeedData.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Infrastructure\\Migrations\\20260127072753_initWithSeedData.cs",
+              "RelativeToolTip": "TargetSocialApp.Infrastructure\\Migrations\\20260127072753_initWithSeedData.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-01-21T10:20:23.175Z",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T07:27:53.95Z",
               "EditorCaption": ""
             }
           ]

@@ -21,7 +21,7 @@ namespace TargetSocialApp.Infrastructure.Persistence
 
                 var provider = Environment.GetEnvironmentVariable("EF_PROVIDER")
                                ?? configuration["EF_PROVIDER"]
-                               ?? "Npgsql"; // changed default to Npgsql
+                               ?? "SqlServer";
 
                 var connectionString = Environment.GetEnvironmentVariable("DefaultConnection")
                                        ?? configuration.GetConnectionString("DefaultConnection");

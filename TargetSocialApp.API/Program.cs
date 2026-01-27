@@ -9,11 +9,6 @@ namespace TargetSocialApp.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-            Console.WriteLine($"[Diagnosis] PORT env var: '{Environment.GetEnvironmentVariable("PORT")}'");
-            Console.WriteLine($"[Diagnosis] Binding to: http://0.0.0.0:{port}");
-            builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
-
             // -----------------------------
             // 1️⃣ Layer Dependencies
             // -----------------------------
@@ -83,6 +78,28 @@ namespace TargetSocialApp.API
             app.MapControllers();
             app.MapHub<TargetSocialApp.API.Hubs.ChatHub>("/chatHub");
             app.MapHub<TargetSocialApp.API.Hubs.NotificationHub>("/notificationHub");
+
+
+
+            // -----------------------------
+            // 8️⃣ Data Seeding
+            // -----------------------------
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<TargetSocialApp.Infrastructure.Persistence.ApplicationDbContext>();
+                    // Move to Infrastructure Seeding namespace
+                    var seeder = new TargetSocialApp.Infrastructure.Persistence.Seeding.DataSeeder(context);
+                    seeder.SeedAsync().Wait();
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred while seeding the database.");
+                }
+            }
 
             app.Run();
         }

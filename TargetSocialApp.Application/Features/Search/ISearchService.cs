@@ -4,18 +4,22 @@ using TargetSocialApp.Application.Common.Bases;
 using TargetSocialApp.Domain.Entities;
 using TargetSocialApp.Application.Features.Stories.Requests; // For highlight
 
+using TargetSocialApp.Application.Features.Posts.DTOs;
+using TargetSocialApp.Application.Features.Users.DTOs;
+using TargetSocialApp.Application.Features.Search.DTOs;
+
 namespace TargetSocialApp.Application.Features.Search
 {
     public interface ISearchService
     {
-        Task<Response<object>> SearchGeneralAsync(string query); // Returns mixed content
-        Task<Response<List<User>>> SearchUsersAsync(string query);
-        Task<Response<List<Post>>> SearchPostsAsync(string query);
+        Task<Response<SearchDto>> SearchGeneralAsync(string query); 
+        Task<Response<List<UserDto>>> SearchUsersAsync(string query);
+        Task<Response<List<PostDto>>> SearchPostsAsync(string query);
         Task<Response<List<string>>> SearchHashtagsAsync(string query);
         Task<Response<List<string>>> GetSuggestionsAsync(string query);
-        Task<Response<List<Post>>> GetTrendingPostsAsync();
+        Task<Response<List<PostDto>>> GetTrendingPostsAsync();
         
-        Task<Response<List<Post>>> GetPostsByHashtagAsync(string hashtag);
+        Task<Response<List<PostDto>>> GetPostsByHashtagAsync(string hashtag);
         Task<Response<List<string>>> GetTrendingHashtagsAsync();
     }
 }

@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using TargetSocialApp.Application.Common.Bases;
 using TargetSocialApp.Application.Common.Interfaces;
 using TargetSocialApp.Application.Features.Notifications.Requests;
+using TargetSocialApp.Application.Features.Notifications.DTOs;
 using TargetSocialApp.Domain.Entities;
 
 namespace TargetSocialApp.Application.Features.Notifications
@@ -38,17 +39,30 @@ namespace TargetSocialApp.Application.Features.Notifications
              return Response<string>.Success("Deleted");
         }
 
-        public async Task<Response<List<Notification>>> GetNotificationsAsync(int userId)
+        public async Task<Response<List<NotificationDto>>> GetNotificationsAsync(int userId)
         {
              var notifications = await _notificationRepository.GetTableNoTracking()
                  .Where(n => n.UserId == userId)
                  .OrderByDescending(n => n.CreatedAt)
                  .Take(50)
+                 .Select(n => new NotificationDto
+                 {
+                     Id = n.Id,
+                     UserId = n.UserId,
+                     ActorId = n.ActorId,
+                     ActorName = n.ActorId.HasValue ? n.Actor.FirstName + " " + n.Actor.LastName : "System",
+                     ActorAvatarUrl = n.ActorId.HasValue ? n.Actor.AvatarUrl : null,
+                     Type = n.Type,
+                     ReferenceId = n.ReferenceId,
+                     Content = n.Content,
+                     IsRead = n.IsRead,
+                     CreatedAt = n.CreatedAt
+                 })
                  .ToListAsync();
-             return Response<List<Notification>>.Success(notifications);
+             return Response<List<NotificationDto>>.Success(notifications);
         }
 
-        public async Task<Response<NotificationSetting>> GetSettingsAsync(int userId)
+        public async Task<Response<NotificationSettingDto>> GetSettingsAsync(int userId)
         {
              var settings = await _settingsRepository.GetTableNoTracking()
                  .FirstOrDefaultAsync(s => s.UserId == userId);
@@ -60,7 +74,7 @@ namespace TargetSocialApp.Application.Features.Notifications
                  await _settingsRepository.AddAsync(settings);
                  await _unitOfWork.CompleteAsync();
              }
-             return Response<NotificationSetting>.Success(settings);
+             return Response<NotificationSettingDto>.Success(settings.Adapt<NotificationSettingDto>());
         }
 
         public async Task<Response<int>> GetUnreadCountAsync(int userId)
@@ -72,11 +86,6 @@ namespace TargetSocialApp.Application.Features.Notifications
 
         public async Task<Response<string>> MarkAllAsReadAsync(int userId)
         {
-             var unread = await _notificationRepository.GetTableNoTracking()
-                 .Where(n => n.UserId == userId && !n.IsRead)
-                 .ToListAsync(); // Need tracking for update - wait, GetTableNoTracking implies no tracking.
-             
-             // Better use UpdateRange with tracking
              var unreadTracking = await _notificationRepository.GetTableAsTracking()
                  .Where(n => n.UserId == userId && !n.IsRead)
                  .ToListAsync();
@@ -100,7 +109,7 @@ namespace TargetSocialApp.Application.Features.Notifications
              return Response<string>.Success("Marked as read");
         }
 
-        public async Task<Response<NotificationSetting>> UpdateSettingsAsync(int userId, UpdateNotificationSettingsRequest request)
+        public async Task<Response<NotificationSettingDto>> UpdateSettingsAsync(int userId, UpdateNotificationSettingsRequest request)
         {
              var settings = await _settingsRepository.GetTableAsTracking()
                  .FirstOrDefaultAsync(s => s.UserId == userId);
@@ -112,10 +121,10 @@ namespace TargetSocialApp.Application.Features.Notifications
              }
 
              request.Adapt(settings);
-             await _settingsRepository.UpdateAsync(settings); // Redundant if tracking, but safe
+             await _settingsRepository.UpdateAsync(settings); 
              await _unitOfWork.CompleteAsync();
              
-             return Response<NotificationSetting>.Success(settings);
+             return Response<NotificationSettingDto>.Success(settings.Adapt<NotificationSettingDto>());
         }
     }
 }

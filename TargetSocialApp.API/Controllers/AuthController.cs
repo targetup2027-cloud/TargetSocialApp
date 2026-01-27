@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TargetSocialApp.Application.Features.Auth;
 using TargetSocialApp.Application.Features.Auth.Requests;
+using TargetSocialApp.Application.Common.Bases;
 
 namespace TargetSocialApp.API.Controllers
 {
@@ -19,48 +20,48 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             var response = await _authService.RegisterAsync(request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var response = await _authService.LoginAsync(request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         {
             var response = await _authService.RefreshTokenAsync(request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
             var response = await _authService.ForgotPasswordAsync(request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
         {
             var response = await _authService.ResetPasswordAsync(request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request)
         {
             var response = await _authService.VerifyEmailAsync(request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("google")]
@@ -68,8 +69,8 @@ namespace TargetSocialApp.API.Controllers
         {
             request.Provider = "Google";
             var response = await _authService.SocialLoginAsync(request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
       

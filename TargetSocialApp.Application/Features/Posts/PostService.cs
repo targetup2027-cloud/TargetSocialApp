@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using TargetSocialApp.Application.Common.Bases;
 using TargetSocialApp.Application.Common.Interfaces;
 using TargetSocialApp.Application.Features.Posts.Requests;
+using TargetSocialApp.Application.Features.Posts.DTOs;
 using TargetSocialApp.Domain.Entities;
 using TargetSocialApp.Domain.Enums;
 
@@ -14,23 +15,26 @@ namespace TargetSocialApp.Application.Features.Posts
     public class PostService : AppService, IPostService
     {
         private readonly IGenericRepository<Post> _postRepository;
+        private readonly IGenericRepository<User> _userRepository;
         private readonly IGenericRepository<PostReaction> _reactionRepository;
         private readonly IGenericRepository<SavedPost> _savedPostRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public PostService(
             IGenericRepository<Post> postRepository,
+            IGenericRepository<User> userRepository,
             IGenericRepository<PostReaction> reactionRepository,
             IGenericRepository<SavedPost> savedPostRepository,
             IUnitOfWork unitOfWork)
         {
             _postRepository = postRepository;
+            _userRepository = userRepository;
             _reactionRepository = reactionRepository;
             _savedPostRepository = savedPostRepository;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Response<Post>> CreatePostAsync(int userId, CreatePostRequest request)
+        public async Task<Response<PostDto>> CreatePostAsync(int userId, CreatePostRequest request)
         {
             var post = new Post
             {
@@ -47,7 +51,7 @@ namespace TargetSocialApp.Application.Features.Posts
                     post.Media.Add(new PostMedia 
                     { 
                         Url = url,
-                        MediaType = MediaType.Image // Simplification: assuming images for now or parsed from URL
+                        MediaType = MediaType.Image 
                     });
                 }
             }
@@ -55,7 +59,25 @@ namespace TargetSocialApp.Application.Features.Posts
             await _postRepository.AddAsync(post);
             await _unitOfWork.CompleteAsync();
 
-            return Response<Post>.Success(post, "Post created successfully");
+            var user = await _userRepository.GetByIdAsync(userId);
+
+            var dto = new PostDto
+            {
+                Id = post.Id,
+                UserId = post.UserId,
+                UserName = user != null ? $"{user.FirstName} {user.LastName}" : "Unknown",
+                UserAvatarUrl = user?.AvatarUrl,
+                Content = post.Content,
+                Privacy = post.Privacy,
+                CreatedAt = post.CreatedAt,
+                Media = post.Media.Select(m => new PostMediaDto { Id = m.Id, Url = m.Url, MediaType = m.MediaType }).ToList(),
+                ReactionsCount = 0,
+                CommentsCount = 0,
+                IsLikedByCurrentUser = false,
+                IsSavedByCurrentUser = false
+            };
+
+            return Response<PostDto>.Success(dto, "Post created successfully");
         }
 
         public async Task<Response<string>> DeletePostAsync(int userId, int postId)
@@ -69,75 +91,113 @@ namespace TargetSocialApp.Application.Features.Posts
             return Response<string>.Success("Post deleted");
         }
 
-        public async Task<Response<List<Post>>> GetFeedAsync(int userId)
+        private IQueryable<PostDto> GetBaseQuery()
         {
-            // Simplified Feed: All public posts + posts by friends
-            // In real app, this needs complex query with friends logic
-            var posts = await _postRepository.GetTableNoTracking()
+            return _postRepository.GetTableNoTracking()
+                .Select(p => new PostDto
+                {
+                    Id = p.Id,
+                    UserId = p.UserId,
+                    UserName = p.User.FirstName + " " + p.User.LastName,
+                    UserAvatarUrl = p.User.AvatarUrl,
+                    Content = p.Content,
+                    Privacy = p.Privacy,
+                    CreatedAt = p.CreatedAt,
+                    Media = p.Media.Select(m => new PostMediaDto { Id = m.Id, Url = m.Url, MediaType = m.MediaType }).ToList(),
+                    ReactionsCount = p.Reactions.Count(),
+                    CommentsCount = p.Comments.Count(),
+                    IsLikedByCurrentUser = false, // Pending context
+                    IsSavedByCurrentUser = false // Pending context
+                });
+        }
+
+        public async Task<Response<List<PostDto>>> GetFeedAsync(int userId)
+        {
+            var posts = await GetBaseQuery()
                 .OrderByDescending(x => x.CreatedAt)
                 .Take(50)
                 .ToListAsync();
 
-            return Response<List<Post>>.Success(posts);
+            return Response<List<PostDto>>.Success(posts);
         }
 
-        public async Task<Response<List<Post>>> GetFollowingFeedAsync(int userId)
+        public async Task<Response<List<PostDto>>> GetFollowingFeedAsync(int userId)
         {
-            // Placeholder: would join with Following table
-             var posts = await _postRepository.GetTableNoTracking()
+             var posts = await GetBaseQuery()
                  .Where(p => p.Privacy == PrivacyLevel.Public) 
                 .OrderByDescending(x => x.CreatedAt)
                 .ToListAsync();
-            return Response<List<Post>>.Success(posts);
+            return Response<List<PostDto>>.Success(posts);
         }
 
-        public async Task<Response<List<Post>>> GetFriendsFeedAsync(int userId)
+        public async Task<Response<List<PostDto>>> GetFriendsFeedAsync(int userId)
         {
-             // Placeholder: would join with Friendship table
-             var posts = await _postRepository.GetTableNoTracking()
-                .Where(p => p.Privacy == PrivacyLevel.Friends) // Just an example filter
+             var posts = await GetBaseQuery()
+                .Where(p => p.Privacy == PrivacyLevel.Friends)
                 .OrderByDescending(x => x.CreatedAt)
                 .ToListAsync();
-            return Response<List<Post>>.Success(posts);
+            return Response<List<PostDto>>.Success(posts);
         }
 
-        public async Task<Response<List<Post>>> GetUserPostsAsync(int userId)
+        public async Task<Response<List<PostDto>>> GetUserPostsAsync(int userId)
         {
-            var posts = await _postRepository.GetTableNoTracking()
+            var posts = await GetBaseQuery()
                 .Where(p => p.UserId == userId)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
-            return Response<List<Post>>.Success(posts);
+            return Response<List<PostDto>>.Success(posts);
         }
 
-        public async Task<Response<Post>> GetPostByIdAsync(int postId)
+        public async Task<Response<PostDto>> GetPostByIdAsync(int postId)
         {
-             var post = await _postRepository.GetByIdAsync(postId);
-             if (post == null) return Response<Post>.Failure("Post not found");
-             return Response<Post>.Success(post);
+             var post = await GetBaseQuery()
+                 .FirstOrDefaultAsync(p => p.Id == postId);
+
+             if (post == null) return Response<PostDto>.Failure("Post not found");
+             return Response<PostDto>.Success(post);
         }
 
-        public async Task<Response<List<PostReaction>>> GetPostReactionsAsync(int postId)
+        public async Task<Response<List<PostReactionDto>>> GetPostReactionsAsync(int postId)
         {
             var reactions = await _reactionRepository.GetTableNoTracking()
                 .Where(r => r.PostId == postId)
+                .Select(r => new PostReactionDto
+                {
+                    Id = r.Id,
+                    UserId = r.UserId,
+                    UserName = r.User.FirstName + " " + r.User.LastName,
+                    UserAvatarUrl = r.User.AvatarUrl,
+                    ReactionType = r.ReactionType
+                })
                 .ToListAsync();
-            return Response<List<PostReaction>>.Success(reactions);
+            return Response<List<PostReactionDto>>.Success(reactions);
         }
 
-        public async Task<Response<List<Post>>> GetSavedPostsAsync(int userId)
+        public async Task<Response<List<PostDto>>> GetSavedPostsAsync(int userId)
         {
             var saved = await _savedPostRepository.GetTableNoTracking()
                 .Where(s => s.UserId == userId)
-                .Include(s => s.Post)
-                .Select(s => s.Post)
+                .Select(s => new PostDto
+                {
+                    Id = s.Post.Id,
+                    UserId = s.Post.UserId,
+                    UserName = s.Post.User.FirstName + " " + s.Post.User.LastName,
+                    UserAvatarUrl = s.Post.User.AvatarUrl,
+                    Content = s.Post.Content,
+                    Privacy = s.Post.Privacy,
+                    CreatedAt = s.Post.CreatedAt,
+                    Media = s.Post.Media.Select(m => new PostMediaDto { Id = m.Id, Url = m.Url, MediaType = m.MediaType }).ToList(),
+                    ReactionsCount = s.Post.Reactions.Count(),
+                    CommentsCount = s.Post.Comments.Count(),
+                    IsLikedByCurrentUser = false,
+                    IsSavedByCurrentUser = true
+                })
                 .ToListAsync();
-            return Response<List<Post>>.Success(saved);
+            return Response<List<PostDto>>.Success(saved);
         }
 
         public async Task<Response<string>> LikePostAsync(int userId, int postId)
         {
-            // Toggle like
             var existing = await _reactionRepository.GetTableNoTracking()
                 .FirstOrDefaultAsync(r => r.PostId == postId && r.UserId == userId && r.ReactionType == ReactionType.Like);
             
@@ -148,9 +208,7 @@ namespace TargetSocialApp.Application.Features.Posts
                 return Response<string>.Success("Unliked");
             }
 
-            // Remove other reactions? Or just add Like. Typically Facebook replaces reaction.
-            // Let's assume we treat Like as a reaction. If other reaction exists, update it.
-             var anyReaction = await _reactionRepository.GetTableAsTracking() // Tracking for update
+             var anyReaction = await _reactionRepository.GetTableAsTracking() 
                 .FirstOrDefaultAsync(r => r.PostId == postId && r.UserId == userId);
 
              if(anyReaction != null)
@@ -213,8 +271,6 @@ namespace TargetSocialApp.Application.Features.Posts
 
         public async Task<Response<string>> SharePostAsync(int userId, int postId)
         {
-            // Sharing typically creates a new post referencing the original, or just increments count
-            // For MVP, just return success
             return Response<string>.Success("Shared successfully");
         }
 
@@ -230,11 +286,11 @@ namespace TargetSocialApp.Application.Features.Posts
             return Response<string>.Success("Removed from saved");
         }
 
-        public async Task<Response<Post>> UpdatePostAsync(int userId, int postId, UpdatePostRequest request)
+        public async Task<Response<PostDto>> UpdatePostAsync(int userId, int postId, UpdatePostRequest request)
         {
             var post = await _postRepository.GetByIdAsync(postId);
-            if (post == null) return Response<Post>.Failure("Post not found");
-            if (post.UserId != userId) return Response<Post>.Failure("Unauthorized");
+            if (post == null) return Response<PostDto>.Failure("Post not found");
+            if (post.UserId != userId) return Response<PostDto>.Failure("Unauthorized");
 
             if(request.Content != null) post.Content = request.Content;
             post.Privacy = request.Privacy;
@@ -242,7 +298,26 @@ namespace TargetSocialApp.Application.Features.Posts
 
             await _postRepository.UpdateAsync(post);
             await _unitOfWork.CompleteAsync();
-            return Response<Post>.Success(post);
+
+            var user = await _userRepository.GetByIdAsync(userId);
+            
+            var dto = new PostDto
+            {
+                Id = post.Id,
+                UserId = post.UserId,
+                UserName = user != null ? $"{user.FirstName} {user.LastName}" : "Unknown",
+                UserAvatarUrl = user?.AvatarUrl,
+                Content = post.Content,
+                Privacy = post.Privacy,
+                CreatedAt = post.CreatedAt,
+                Media = post.Media != null ? post.Media.Select(m => new PostMediaDto { Id = m.Id, Url = m.Url, MediaType = m.MediaType }).ToList() : new(),
+                ReactionsCount = await _reactionRepository.GetTableNoTracking().CountAsync(r => r.PostId == postId),
+                CommentsCount = 0, // Need repository for this to be accurate, but Update doesn't change it
+                IsLikedByCurrentUser = false,
+                IsSavedByCurrentUser = false
+            };
+            
+            return Response<PostDto>.Success(dto);
         }
 
         public async Task<Response<string>> UploadMediaAsync(UploadPostMediaRequest request)

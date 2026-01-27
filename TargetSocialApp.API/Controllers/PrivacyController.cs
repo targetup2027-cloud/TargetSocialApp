@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TargetSocialApp.Application.Features.Privacy;
 using TargetSocialApp.Application.Features.Privacy.Requests;
+using TargetSocialApp.Application.Common.Bases;
 
 namespace TargetSocialApp.API.Controllers
 {
@@ -20,7 +21,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _privacyService.GetPrivacySettingsAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("privacy/settings")]
@@ -28,7 +29,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _privacyService.UpdatePrivacySettingsAsync(userId, request);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("users/{userId}/block")]
@@ -36,7 +37,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int currentUserId = 1;
             var response = await _privacyService.BlockUserAsync(currentUserId, userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("users/{userId}/unblock")]
@@ -44,7 +45,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int currentUserId = 1;
             var response = await _privacyService.UnblockUserAsync(currentUserId, userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("users/blocked")]
@@ -52,7 +53,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int currentUserId = 1;
             var response = await _privacyService.GetBlockedUsersAsync(currentUserId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("auth/change-password")]
@@ -60,8 +61,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int currentUserId = 1;
             var response = await _privacyService.ChangePasswordAsync(currentUserId, request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("auth/enable-2fa")]
@@ -69,7 +70,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int currentUserId = 1;
             var response = await _privacyService.Enable2FAAsync(currentUserId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
     }
 }

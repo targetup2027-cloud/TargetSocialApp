@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using TargetSocialApp.Application.Common.Bases;
 using TargetSocialApp.Application.Common.Interfaces;
 using TargetSocialApp.Application.Features.Privacy.Requests;
+using TargetSocialApp.Application.Features.Privacy.DTOs;
+using TargetSocialApp.Application.Features.Users.DTOs;
 using TargetSocialApp.Domain.Entities;
 
 namespace TargetSocialApp.Application.Features.Privacy
@@ -47,8 +49,6 @@ namespace TargetSocialApp.Application.Features.Privacy
         {
              // Simplify: In real world, use UserManager or Hash verification
              var user = await _userRepository.GetByIdAsync(userId);
-             // if (!VerifyHash(request.OldPassword, user.PasswordHash)) return Failure...
-             // user.PasswordHash = Hash(request.NewPassword);
              // Stub
              return Response<string>.Success("Password changed (Stub)");
         }
@@ -58,17 +58,29 @@ namespace TargetSocialApp.Application.Features.Privacy
              return Response<string>.Success("2FA Enabled (Stub)");
         }
 
-        public async Task<Response<List<User>>> GetBlockedUsersAsync(int userId)
+        public async Task<Response<List<UserDto>>> GetBlockedUsersAsync(int userId)
         {
              var blocked = await _blockedRepository.GetTableNoTracking()
                  .Where(b => b.UserId == userId)
                  .Include(b => b.Blocked)
-                 .Select(b => b.Blocked)
+                 .Select(b => new UserDto
+                 {
+                     Id = b.Blocked.Id,
+                     FirstName = b.Blocked.FirstName,
+                     LastName = b.Blocked.LastName,
+                     Email = b.Blocked.Email,
+                     PhoneNumber = b.Blocked.PhoneNumber,
+                     Bio = b.Blocked.Bio,
+                     AvatarUrl = b.Blocked.AvatarUrl,
+                     CoverPhotoUrl = b.Blocked.CoverPhotoUrl,
+                     IsEmailVerified = b.Blocked.IsEmailVerified,
+                     CreatedAt = b.Blocked.CreatedAt
+                 })
                  .ToListAsync();
-             return Response<List<User>>.Success(blocked);
+             return Response<List<UserDto>>.Success(blocked);
         }
 
-        public async Task<Response<PrivacySetting>> GetPrivacySettingsAsync(int userId)
+        public async Task<Response<PrivacySettingDto>> GetPrivacySettingsAsync(int userId)
         {
              var settings = await _privacyRepository.GetTableNoTracking()
                  .FirstOrDefaultAsync(p => p.UserId == userId);
@@ -79,7 +91,8 @@ namespace TargetSocialApp.Application.Features.Privacy
                  await _privacyRepository.AddAsync(settings);
                  await _unitOfWork.CompleteAsync();
              }
-             return Response<PrivacySetting>.Success(settings);
+             
+             return Response<PrivacySettingDto>.Success(settings.Adapt<PrivacySettingDto>());
         }
 
         public async Task<Response<string>> UnblockUserAsync(int userId, int unblockUserId)
@@ -94,7 +107,7 @@ namespace TargetSocialApp.Application.Features.Privacy
              return Response<string>.Success("Unblocked");
         }
 
-        public async Task<Response<PrivacySetting>> UpdatePrivacySettingsAsync(int userId, UpdatePrivacySettingsRequest request)
+        public async Task<Response<PrivacySettingDto>> UpdatePrivacySettingsAsync(int userId, UpdatePrivacySettingsRequest request)
         {
              var settings = await _privacyRepository.GetTableAsTracking()
                  .FirstOrDefaultAsync(p => p.UserId == userId);
@@ -106,11 +119,12 @@ namespace TargetSocialApp.Application.Features.Privacy
              }
 
              // Map request to settings
-             settings.ProfileVisibility = request.ProfileVisibility;
+             // Assuming request has same properties as entity/DTO or subset
+             request.Adapt(settings);
              
              await _privacyRepository.UpdateAsync(settings);
              await _unitOfWork.CompleteAsync();
-             return Response<PrivacySetting>.Success(settings);
+             return Response<PrivacySettingDto>.Success(settings.Adapt<PrivacySettingDto>());
         }
     }
 }

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TargetSocialApp.Application.Features.Search;
+using TargetSocialApp.Application.Common.Bases;
 
 namespace TargetSocialApp.API.Controllers
 {
@@ -18,42 +19,42 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> Search([FromQuery] string query)
         {
             var response = await _searchService.SearchGeneralAsync(query);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("users")]
         public async Task<IActionResult> SearchUsers([FromQuery] string query)
         {
             var response = await _searchService.SearchUsersAsync(query);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("posts")]
         public async Task<IActionResult> SearchPosts([FromQuery] string query)
         {
             var response = await _searchService.SearchPostsAsync(query);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("hashtags")]
         public async Task<IActionResult> SearchHashtags([FromQuery] string query)
         {
             var response = await _searchService.SearchHashtagsAsync(query);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("suggestions")]
         public async Task<IActionResult> GetSuggestions([FromQuery] string query)
         {
             var response = await _searchService.GetSuggestionsAsync(query);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("trending")]
         public async Task<IActionResult> GetTrending()
         {
             var response = await _searchService.GetTrendingPostsAsync();
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
     }
 }

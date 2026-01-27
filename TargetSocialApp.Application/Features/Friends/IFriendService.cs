@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 using TargetSocialApp.Application.Common.Bases;
 using TargetSocialApp.Domain.Entities;
 
+using TargetSocialApp.Application.Features.Users.DTOs;
+using TargetSocialApp.Application.Features.Friends.DTOs;
+
 namespace TargetSocialApp.Application.Features.Friends
 {
     public interface IFriendService
@@ -15,15 +18,15 @@ namespace TargetSocialApp.Application.Features.Friends
         Task<Response<string>> UnfriendAsync(int userId, int targetUserId);
 
         // Lists
-        Task<Response<List<User>>> GetFriendsListAsync(int userId);
-        Task<Response<List<Friendship>>> GetReceivedRequestsAsync(int userId);
-        Task<Response<List<Friendship>>> GetSentRequestsAsync(int userId);
-        Task<Response<List<User>>> GetFriendSuggestionsAsync(int userId);
+        Task<Response<List<UserDto>>> GetFriendsListAsync(int userId);
+        Task<Response<List<FriendshipDto>>> GetReceivedRequestsAsync(int userId);
+        Task<Response<List<FriendshipDto>>> GetSentRequestsAsync(int userId);
+        Task<Response<List<UserDto>>> GetFriendSuggestionsAsync(int userId);
 
         // Following
         Task<Response<string>> FollowUserAsync(int followerId, int followingId);
         Task<Response<string>> UnfollowUserAsync(int followerId, int followingId);
-        Task<Response<List<User>>> GetFollowersAsync(int userId);
-        Task<Response<List<User>>> GetFollowingAsync(int userId);
+        Task<Response<List<UserDto>>> GetFollowersAsync(int userId);
+        Task<Response<List<UserDto>>> GetFollowingAsync(int userId);
     }
 }

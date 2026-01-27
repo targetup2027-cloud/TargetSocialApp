@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TargetSocialApp.Application.Features.Comments;
 using TargetSocialApp.Application.Features.Comments.Requests;
+using TargetSocialApp.Application.Common.Bases;
 
 namespace TargetSocialApp.API.Controllers
 {
@@ -19,14 +20,14 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _commentService.AddCommentAsync(userId, postId, request);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("api/posts/{postId}/comments")]
         public async Task<IActionResult> GetComments(int postId)
         {
             var response = await _commentService.GetPostCommentsAsync(postId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("api/comments/{commentId}")]
@@ -34,8 +35,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _commentService.UpdateCommentAsync(userId, commentId, request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpDelete("api/comments/{commentId}")]
@@ -43,8 +44,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _commentService.DeleteCommentAsync(userId, commentId);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("api/comments/{commentId}/replies")]
@@ -52,15 +53,15 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _commentService.ReplyToCommentAsync(userId, commentId, request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("api/comments/{commentId}/replies")]
         public async Task<IActionResult> GetReplies(int commentId)
         {
             var response = await _commentService.GetCommentRepliesAsync(commentId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("api/comments/{commentId}/like")]
@@ -68,7 +69,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _commentService.LikeCommentAsync(userId, commentId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
     }
 }

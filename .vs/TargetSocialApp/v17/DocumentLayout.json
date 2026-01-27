@@ -3,8 +3,52 @@
   "WorkspaceRootPath": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Infrastructure\\Migrations\\20260127072753_initWithSeedData.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:TargetSocialApp.Infrastructure\\Migrations\\20260127072753_initWithSeedData.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.application\\features\\media\\mediaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|solutionrelative:targetsocialapp.application\\features\\media\\mediaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.application\\features\\privacy\\privacyservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|solutionrelative:targetsocialapp.application\\features\\privacy\\privacyservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.application\\features\\privacy\\iprivacyservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|solutionrelative:targetsocialapp.application\\features\\privacy\\iprivacyservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.application\\features\\messaging\\imessagingservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|solutionrelative:targetsocialapp.application\\features\\messaging\\imessagingservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.application\\features\\privacy\\dtos\\privacysettingdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|solutionrelative:targetsocialapp.application\\features\\privacy\\dtos\\privacysettingdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.application\\features\\messaging\\dtos\\conversationdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|solutionrelative:targetsocialapp.application\\features\\messaging\\dtos\\conversationdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.application\\features\\messaging\\messagingservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|solutionrelative:targetsocialapp.application\\features\\messaging\\messagingservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.application\\features\\search\\searchservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|solutionrelative:targetsocialapp.application\\features\\search\\searchservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.application\\features\\notifications\\dtos\\notificationdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|solutionrelative:targetsocialapp.application\\features\\notifications\\dtos\\notificationdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.application\\features\\comments\\commentservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{55D837B7-CF2A-41E5-9DA4-5512B46D9A70}|TargetSocialApp.Application\\TargetSocialApp.Application.csproj|solutionrelative:targetsocialapp.application\\features\\comments\\commentservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.api\\controllers\\friendscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|solutionrelative:targetsocialapp.api\\controllers\\friendscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.api\\controllers\\conversationscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|solutionrelative:targetsocialapp.api\\controllers\\conversationscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,7 +58,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 9,
           "Children": [
             {
               "$type": "Bookmark",
@@ -38,15 +82,158 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "20260127072753_initWithSeedData.cs",
-              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Infrastructure\\Migrations\\20260127072753_initWithSeedData.cs",
-              "RelativeDocumentMoniker": "TargetSocialApp.Infrastructure\\Migrations\\20260127072753_initWithSeedData.cs",
-              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Infrastructure\\Migrations\\20260127072753_initWithSeedData.cs",
-              "RelativeToolTip": "TargetSocialApp.Infrastructure\\Migrations\\20260127072753_initWithSeedData.cs",
-              "ViewState": "AgIAAB8AAAAAAAAAAAAgwAAAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 2,
+              "Title": "IPrivacyService.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Privacy\\IPrivacyService.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.Application\\Features\\Privacy\\IPrivacyService.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Privacy\\IPrivacyService.cs",
+              "RelativeToolTip": "TargetSocialApp.Application\\Features\\Privacy\\IPrivacyService.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAQwAQAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-27T07:27:53.95Z",
+              "WhenOpened": "2026-01-27T08:13:31.697Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "PrivacySettingDto.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Privacy\\DTOs\\PrivacySettingDto.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.Application\\Features\\Privacy\\DTOs\\PrivacySettingDto.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Privacy\\DTOs\\PrivacySettingDto.cs",
+              "RelativeToolTip": "TargetSocialApp.Application\\Features\\Privacy\\DTOs\\PrivacySettingDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T08:11:32.899Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "IMessagingService.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Messaging\\IMessagingService.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.Application\\Features\\Messaging\\IMessagingService.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Messaging\\IMessagingService.cs",
+              "RelativeToolTip": "TargetSocialApp.Application\\Features\\Messaging\\IMessagingService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T08:09:33.701Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "MessagingService.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Messaging\\MessagingService.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.Application\\Features\\Messaging\\MessagingService.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Messaging\\MessagingService.cs",
+              "RelativeToolTip": "TargetSocialApp.Application\\Features\\Messaging\\MessagingService.cs",
+              "ViewState": "AgIAAL8AAAAAAAAAAAAuwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T08:09:06.516Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MediaService.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Media\\MediaService.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.Application\\Features\\Media\\MediaService.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Media\\MediaService.cs",
+              "RelativeToolTip": "TargetSocialApp.Application\\Features\\Media\\MediaService.cs",
+              "ViewState": "AgIAAEAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T08:08:33.498Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "PrivacyService.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Privacy\\PrivacyService.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.Application\\Features\\Privacy\\PrivacyService.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Privacy\\PrivacyService.cs",
+              "RelativeToolTip": "TargetSocialApp.Application\\Features\\Privacy\\PrivacyService.cs",
+              "ViewState": "AgIAACAAAAAAAAAAAAAlwA4AAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T08:08:05.401Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "ConversationDto.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Messaging\\DTOs\\ConversationDto.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.Application\\Features\\Messaging\\DTOs\\ConversationDto.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Messaging\\DTOs\\ConversationDto.cs",
+              "RelativeToolTip": "TargetSocialApp.Application\\Features\\Messaging\\DTOs\\ConversationDto.cs",
+              "ViewState": "AgIAABsAAAAAAAAAAAAqwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T08:06:29.219Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "NotificationDto.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Notifications\\DTOs\\NotificationDto.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.Application\\Features\\Notifications\\DTOs\\NotificationDto.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Notifications\\DTOs\\NotificationDto.cs",
+              "RelativeToolTip": "TargetSocialApp.Application\\Features\\Notifications\\DTOs\\NotificationDto.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T07:59:08.837Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "SearchService.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Search\\SearchService.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.Application\\Features\\Search\\SearchService.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Search\\SearchService.cs",
+              "RelativeToolTip": "TargetSocialApp.Application\\Features\\Search\\SearchService.cs",
+              "ViewState": "AgIAAHAAAAAAAAAAAAAAwJkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T07:57:52.113Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "CommentService.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Comments\\CommentService.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.Application\\Features\\Comments\\CommentService.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Application\\Features\\Comments\\CommentService.cs",
+              "RelativeToolTip": "TargetSocialApp.Application\\Features\\Comments\\CommentService.cs",
+              "ViewState": "AgIAACcAAAAAAAAAAAAowAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T07:56:00.489Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "FriendsController.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\Controllers\\FriendsController.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.API\\Controllers\\FriendsController.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\Controllers\\FriendsController.cs",
+              "RelativeToolTip": "TargetSocialApp.API\\Controllers\\FriendsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T07:55:52.93Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ConversationsController.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\Controllers\\ConversationsController.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.API\\Controllers\\ConversationsController.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\Controllers\\ConversationsController.cs",
+              "RelativeToolTip": "TargetSocialApp.API\\Controllers\\ConversationsController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAE4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-27T07:50:11.386Z",
               "EditorCaption": ""
             }
           ]

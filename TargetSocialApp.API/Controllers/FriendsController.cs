@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TargetSocialApp.Application.Features.Friends;
+using TargetSocialApp.Application.Common.Bases;
 
 namespace TargetSocialApp.API.Controllers
 {
@@ -18,8 +19,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int requesterId = 1; // Claims
             var response = await _friendService.SendFriendRequestAsync(requesterId, receiverId);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("api/friends/accept/{requestId}")]
@@ -27,8 +28,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _friendService.AcceptFriendRequestAsync(userId, requestId);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("api/friends/reject/{requestId}")]
@@ -36,8 +37,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _friendService.RejectFriendRequestAsync(userId, requestId);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpDelete("api/friends/cancel/{requestId}")]
@@ -45,8 +46,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _friendService.CancelFriendRequestAsync(userId, requestId);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpDelete("api/friends/{targetUserId}")]
@@ -54,8 +55,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _friendService.UnfriendAsync(userId, targetUserId);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("api/friends")]
@@ -63,7 +64,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _friendService.GetFriendsListAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("api/friends/requests")]
@@ -71,7 +72,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _friendService.GetReceivedRequestsAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("api/friends/sent-requests")]
@@ -79,7 +80,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _friendService.GetSentRequestsAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("api/friends/suggestions")]
@@ -87,7 +88,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _friendService.GetFriendSuggestionsAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("api/users/{userId}/follow")]
@@ -95,8 +96,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int followerId = 1; 
             var response = await _friendService.FollowUserAsync(followerId, userId);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpDelete("api/users/{userId}/unfollow")]
@@ -104,21 +105,21 @@ namespace TargetSocialApp.API.Controllers
         {
             int followerId = 1;
             var response = await _friendService.UnfollowUserAsync(followerId, userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("api/users/{userId}/followers")]
         public async Task<IActionResult> GetFollowers(int userId)
         {
             var response = await _friendService.GetFollowersAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("api/users/{userId}/following")]
         public async Task<IActionResult> GetFollowing(int userId)
         {
             var response = await _friendService.GetFollowingAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
     }
 }

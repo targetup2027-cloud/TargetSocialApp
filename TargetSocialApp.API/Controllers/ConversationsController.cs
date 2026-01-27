@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TargetSocialApp.Application.Features.Messaging;
 using TargetSocialApp.Application.Features.Messaging.Requests;
+using TargetSocialApp.Application.Common.Bases;
 
 namespace TargetSocialApp.API.Controllers
 {
@@ -20,7 +21,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.GetUserConversationsAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("{conversationId}")]
@@ -28,8 +29,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.GetConversationByIdAsync(userId, conversationId);
-            if (!response.Succeeded) return NotFound(response);
-            return Ok(response);
+            if (!response.Succeeded) return NotFound(ApiResponseWrapper.Create(response, 404));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost]
@@ -37,7 +38,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.CreateConversationAsync(userId, request);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpDelete("{conversationId}")]
@@ -45,8 +46,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.DeleteConversationAsync(userId, conversationId);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("{conversationId}/messages")]
@@ -54,7 +55,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.SendMessageAsync(userId, conversationId, request);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("{conversationId}/messages")]
@@ -62,8 +63,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.GetMessagesAsync(userId, conversationId);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         // Media etc can be handled here or separate endpoints
@@ -71,7 +72,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> SendMedia(int conversationId)
         {
              // Implement using MessagingService SendMessage with type=Media
-             return Ok();
+             return Ok(ApiResponseWrapper.Create(Response<string>.Success("Succeeded")));
         }
     }
 }

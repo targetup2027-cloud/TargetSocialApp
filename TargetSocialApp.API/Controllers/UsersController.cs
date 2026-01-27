@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TargetSocialApp.Application.Features.Users;
 using TargetSocialApp.Application.Features.Users.Requests;
+using TargetSocialApp.Application.Common.Bases;
 
 namespace TargetSocialApp.API.Controllers
 {
@@ -19,8 +20,8 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> GetUser(int userId)
         {
             var response = await _userService.GetUserByIdAsync(userId);
-            if (!response.Succeeded) return NotFound(response);
-            return Ok(response);
+            if (!response.Succeeded) return NotFound(ApiResponseWrapper.Create(response, 404));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("me")]
@@ -29,8 +30,8 @@ namespace TargetSocialApp.API.Controllers
             // In real app, get UserId from User.Claims
             int currentUserId = 1; // Placeholder
             var response = await _userService.GetUserByIdAsync(currentUserId);
-            if (!response.Succeeded) return NotFound(response);
-            return Ok(response);
+            if (!response.Succeeded) return NotFound(ApiResponseWrapper.Create(response, 404));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("me")]
@@ -38,8 +39,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int currentUserId = 1; // Claims
             var response = await _userService.UpdateProfileAsync(currentUserId, request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("me/avatar")]
@@ -47,8 +48,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int currentUserId = 1; 
             var response = await _userService.UpdateAvatarAsync(currentUserId, request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("me/cover")]
@@ -56,8 +57,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int currentUserId = 1; 
             var response = await _userService.UpdateCoverAsync(currentUserId, request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpDelete("me/avatar")]
@@ -65,8 +66,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int currentUserId = 1; 
             var response = await _userService.DeleteAvatarAsync(currentUserId);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
     }
 }

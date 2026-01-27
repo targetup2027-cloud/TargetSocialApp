@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using TargetSocialApp.Application.Features.Posts;
 using TargetSocialApp.Application.Features.Posts.Requests;
+using TargetSocialApp.Application.Common.Bases;
 
 namespace TargetSocialApp.API.Controllers
 {
@@ -21,15 +22,15 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1; // Claims
             var response = await _postService.CreatePostAsync(userId, request);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("{postId}")]
         public async Task<IActionResult> GetPost(int postId)
         {
             var response = await _postService.GetPostByIdAsync(postId);
-            if(!response.Succeeded) return NotFound(response);
-            return Ok(response);
+            if(!response.Succeeded) return NotFound(ApiResponseWrapper.Create(response, 404));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("{postId}")]
@@ -37,8 +38,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.UpdatePostAsync(userId, postId, request);
-            if(!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if(!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpDelete("{postId}")]
@@ -46,8 +47,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.DeletePostAsync(userId, postId);
-            if(!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if(!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("feed")]
@@ -55,7 +56,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1; 
             var response = await _postService.GetFeedAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("feed/friends")]
@@ -63,7 +64,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.GetFriendsFeedAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("feed/following")]
@@ -71,7 +72,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.GetFollowingFeedAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("{postId}/like")]
@@ -79,7 +80,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.LikePostAsync(userId, postId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("{postId}/react")]
@@ -87,14 +88,14 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.ReactToPostAsync(userId, postId, request);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("{postId}/reactions")]
         public async Task<IActionResult> GetReactions(int postId)
         {
             var response = await _postService.GetPostReactionsAsync(postId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("{postId}/share")]
@@ -102,7 +103,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.SharePostAsync(userId, postId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("{postId}/save")]
@@ -110,7 +111,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.SavePostAsync(userId, postId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpDelete("{postId}/save")]
@@ -118,7 +119,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.UnsavePostAsync(userId, postId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("saved")]
@@ -126,15 +127,15 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.GetSavedPostsAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("upload-media")]
         public async Task<IActionResult> UploadMedia([FromForm] UploadPostMediaRequest request)
         {
             var response = await _postService.UploadMediaAsync(request);
-            if(!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if(!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
     }
 }

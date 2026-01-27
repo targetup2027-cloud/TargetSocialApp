@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using TargetSocialApp.Application.Common.Bases;
 using TargetSocialApp.Application.Common.Interfaces;
+using TargetSocialApp.Application.Features.Friends.DTOs;
+using TargetSocialApp.Application.Features.Users.DTOs;
 using TargetSocialApp.Domain.Entities;
 using TargetSocialApp.Domain.Enums;
 
@@ -47,7 +49,7 @@ namespace TargetSocialApp.Application.Features.Friends
             var friendship = await _friendshipRepository.GetByIdAsync(requestId);
             if (friendship == null) return Response<string>.Failure("Request not found");
             
-            if (friendship.RequesterId != userId) return Response<string>.Failure("Unauthorized"); // User canceling their own request
+            if (friendship.RequesterId != userId) return Response<string>.Failure("Unauthorized"); 
 
             await _friendshipRepository.DeleteAsync(friendship);
             await _unitOfWork.CompleteAsync();
@@ -72,76 +74,154 @@ namespace TargetSocialApp.Application.Features.Friends
              return Response<string>.Success("Followed successfully");
         }
 
-        public async Task<Response<List<User>>> GetFollowersAsync(int userId)
+        public async Task<Response<List<UserDto>>> GetFollowersAsync(int userId)
         {
              var followers = await _followingRepository.GetTableNoTracking()
                  .Where(f => f.FollowingId == userId)
-                 .Include(f => f.Follower)
-                 .Select(f => f.Follower)
+                 .Select(f => new UserDto
+                 {
+                     Id = f.Follower.Id,
+                     FirstName = f.Follower.FirstName,
+                     LastName = f.Follower.LastName,
+                     Email = f.Follower.Email,
+                     PhoneNumber = f.Follower.PhoneNumber,
+                     Bio = f.Follower.Bio,
+                     AvatarUrl = f.Follower.AvatarUrl,
+                     CoverPhotoUrl = f.Follower.CoverPhotoUrl,
+                     IsEmailVerified = f.Follower.IsEmailVerified,
+                     CreatedAt = f.Follower.CreatedAt
+                 })
                  .ToListAsync();
-             return Response<List<User>>.Success(followers);
+             return Response<List<UserDto>>.Success(followers);
         }
 
-        public async Task<Response<List<User>>> GetFollowingAsync(int userId)
+        public async Task<Response<List<UserDto>>> GetFollowingAsync(int userId)
         {
              var followings = await _followingRepository.GetTableNoTracking()
                  .Where(f => f.FollowerId == userId)
-                 .Include(f => f.FollowingUser)
-                 .Select(f => f.FollowingUser)
+                 .Select(f => new UserDto
+                 {
+                     Id = f.FollowingUser.Id,
+                     FirstName = f.FollowingUser.FirstName,
+                     LastName = f.FollowingUser.LastName,
+                     Email = f.FollowingUser.Email,
+                     PhoneNumber = f.FollowingUser.PhoneNumber,
+                     Bio = f.FollowingUser.Bio,
+                     AvatarUrl = f.FollowingUser.AvatarUrl,
+                     CoverPhotoUrl = f.FollowingUser.CoverPhotoUrl,
+                     IsEmailVerified = f.FollowingUser.IsEmailVerified,
+                     CreatedAt = f.FollowingUser.CreatedAt
+                 })
                  .ToListAsync();
-             return Response<List<User>>.Success(followings);
+             return Response<List<UserDto>>.Success(followings);
         }
 
-        public async Task<Response<List<User>>> GetFriendsListAsync(int userId)
+        public async Task<Response<List<UserDto>>> GetFriendsListAsync(int userId)
         {
-             var friendships = await _friendshipRepository.GetTableNoTracking()
+             // Complex selection: Need to pick the OTHER user.
+             // EF Core Select can handle conditionals? yes.
+             var friends = await _friendshipRepository.GetTableNoTracking()
                  .Where(f => (f.RequesterId == userId || f.ReceiverId == userId) && f.Status == FriendshipStatus.Accepted)
-                 .Include(f => f.Requester)
-                 .Include(f => f.Receiver)
+                 .Select(f => f.RequesterId == userId ? 
+                     new UserDto
+                     {
+                         Id = f.Receiver.Id,
+                         FirstName = f.Receiver.FirstName,
+                         LastName = f.Receiver.LastName,
+                         Email = f.Receiver.Email,
+                         PhoneNumber = f.Receiver.PhoneNumber,
+                         Bio = f.Receiver.Bio,
+                         AvatarUrl = f.Receiver.AvatarUrl,
+                         CoverPhotoUrl = f.Receiver.CoverPhotoUrl,
+                         IsEmailVerified = f.Receiver.IsEmailVerified,
+                         CreatedAt = f.Receiver.CreatedAt
+                     } : 
+                     new UserDto
+                     {
+                         Id = f.Requester.Id,
+                         FirstName = f.Requester.FirstName,
+                         LastName = f.Requester.LastName,
+                         Email = f.Requester.Email,
+                         PhoneNumber = f.Requester.PhoneNumber,
+                         Bio = f.Requester.Bio,
+                         AvatarUrl = f.Requester.AvatarUrl,
+                         CoverPhotoUrl = f.Requester.CoverPhotoUrl,
+                         IsEmailVerified = f.Requester.IsEmailVerified,
+                         CreatedAt = f.Requester.CreatedAt
+                     })
                  .ToListAsync();
 
-             var friends = friendships
-                 .Select(f => f.RequesterId == userId ? f.Receiver : f.Requester)
-                 .ToList();
-
-             return Response<List<User>>.Success(friends);
+             return Response<List<UserDto>>.Success(friends);
         }
 
-        public async Task<Response<List<User>>> GetFriendSuggestionsAsync(int userId)
+        public async Task<Response<List<UserDto>>> GetFriendSuggestionsAsync(int userId)
         {
-             // Very basic Suggestion: Users not friends and not self
-             // In real world: Mutual friends algo
              var friendsIds = await _friendshipRepository.GetTableNoTracking()
                  .Where(f => (f.RequesterId == userId || f.ReceiverId == userId))
                  .Select(f => f.RequesterId == userId ? f.ReceiverId : f.RequesterId)
                  .ToListAsync();
              
-             friendsIds.Add(userId); // Exclude self
+             friendsIds.Add(userId); 
 
              var suggestions = await _userRepository.GetTableNoTracking()
                  .Where(u => !friendsIds.Contains(u.Id))
                  .Take(10)
+                 .Select(u => new UserDto
+                 {
+                     Id = u.Id,
+                     FirstName = u.FirstName,
+                     LastName = u.LastName,
+                     Email = u.Email,
+                     PhoneNumber = u.PhoneNumber,
+                     Bio = u.Bio,
+                     AvatarUrl = u.AvatarUrl,
+                     CoverPhotoUrl = u.CoverPhotoUrl,
+                     IsEmailVerified = u.IsEmailVerified,
+                     CreatedAt = u.CreatedAt
+                 })
                  .ToListAsync();
              
-             return Response<List<User>>.Success(suggestions);
+             return Response<List<UserDto>>.Success(suggestions);
         }
 
-        public async Task<Response<List<Friendship>>> GetReceivedRequestsAsync(int userId)
+        public async Task<Response<List<FriendshipDto>>> GetReceivedRequestsAsync(int userId)
         {
              var requests = await _friendshipRepository.GetTableNoTracking()
                  .Where(f => f.ReceiverId == userId && f.Status == FriendshipStatus.Pending)
-                 .Include(f => f.Requester) // Include sender details
+                 .Select(f => new FriendshipDto
+                 {
+                     Id = f.Id,
+                     RequesterId = f.RequesterId,
+                     RequesterName = f.Requester.FirstName + " " + f.Requester.LastName,
+                     RequesterAvatarUrl = f.Requester.AvatarUrl,
+                     ReceiverId = f.ReceiverId,
+                     ReceiverName = f.Receiver.FirstName + " " + f.Receiver.LastName,
+                     ReceiverAvatarUrl = f.Receiver.AvatarUrl,
+                     Status = f.Status,
+                     CreatedAt = f.CreatedAt
+                 })
                  .ToListAsync();
-             return Response<List<Friendship>>.Success(requests);
+             return Response<List<FriendshipDto>>.Success(requests);
         }
 
-        public async Task<Response<List<Friendship>>> GetSentRequestsAsync(int userId)
+        public async Task<Response<List<FriendshipDto>>> GetSentRequestsAsync(int userId)
         {
              var requests = await _friendshipRepository.GetTableNoTracking()
                  .Where(f => f.RequesterId == userId && f.Status == FriendshipStatus.Pending)
-                 .Include(f => f.Receiver)
+                 .Select(f => new FriendshipDto
+                 {
+                     Id = f.Id,
+                     RequesterId = f.RequesterId,
+                     RequesterName = f.Requester.FirstName + " " + f.Requester.LastName,
+                     RequesterAvatarUrl = f.Requester.AvatarUrl,
+                     ReceiverId = f.ReceiverId,
+                     ReceiverName = f.Receiver.FirstName + " " + f.Receiver.LastName,
+                     ReceiverAvatarUrl = f.Receiver.AvatarUrl,
+                     Status = f.Status,
+                     CreatedAt = f.CreatedAt
+                 })
                  .ToListAsync();
-             return Response<List<Friendship>>.Success(requests);
+             return Response<List<FriendshipDto>>.Success(requests);
         }
 
         public async Task<Response<string>> RejectFriendRequestAsync(int userId, int requestId)
@@ -152,7 +232,7 @@ namespace TargetSocialApp.Application.Features.Friends
             if (friendship.ReceiverId != userId) return Response<string>.Failure("Unauthorized");
 
             friendship.Status = FriendshipStatus.Rejected;
-            await _friendshipRepository.UpdateAsync(friendship); // Or delete based on business rule
+            await _friendshipRepository.UpdateAsync(friendship); 
             await _unitOfWork.CompleteAsync();
             return Response<string>.Success("Request rejected");
         }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TargetSocialApp.Application.Features.Notifications;
 using TargetSocialApp.Application.Features.Notifications.Requests;
+using TargetSocialApp.Application.Common.Bases;
 
 namespace TargetSocialApp.API.Controllers
 {
@@ -20,7 +21,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _notificationService.GetNotificationsAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("{notificationId}/read")]
@@ -28,8 +29,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _notificationService.MarkAsReadAsync(userId, notificationId);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("mark-all-read")]
@@ -37,7 +38,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _notificationService.MarkAllAsReadAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpDelete("{notificationId}")]
@@ -45,8 +46,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _notificationService.DeleteNotificationAsync(userId, notificationId);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("unread-count")]
@@ -54,7 +55,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _notificationService.GetUnreadCountAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpGet("settings")]
@@ -62,7 +63,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _notificationService.GetSettingsAsync(userId);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("settings")]
@@ -70,7 +71,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _notificationService.UpdateSettingsAsync(userId, request);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
     }
 }

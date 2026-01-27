@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TargetSocialApp.Application.Features.Messaging;
 using TargetSocialApp.Application.Features.Messaging.Requests;
+using TargetSocialApp.Application.Common.Bases;
 
 namespace TargetSocialApp.API.Controllers
 {
@@ -20,8 +21,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.UpdateMessageAsync(userId, messageId, request);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpDelete("{messageId}")]
@@ -29,8 +30,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.DeleteMessageAsync(userId, messageId);
-            if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPut("{messageId}/read")]
@@ -38,8 +39,8 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.MarkMessageAsReadAsync(userId, messageId);
-             if (!response.Succeeded) return BadRequest(response);
-            return Ok(response);
+             if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
+            return Ok(ApiResponseWrapper.Create(response));
         }
 
         [HttpPost("{messageId}/react")]
@@ -47,7 +48,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.ReactToMessageAsync(userId, messageId, request);
-            return Ok(response);
+            return Ok(ApiResponseWrapper.Create(response));
         }
     }
 }

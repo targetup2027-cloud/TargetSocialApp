@@ -95,3 +95,4 @@ C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Dashboard\obj\Debug\
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Dashboard\obj\Debug\net9.0\TargetSocialApp.Dashboard.pdb
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Dashboard\obj\Debug\net9.0\TargetSocialApp.Dashboard.genruntimeconfig.cache
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Dashboard\obj\Debug\net9.0\ref\TargetSocialApp.Dashboard.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Dashboard\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt

@@ -5,6 +5,10 @@
     {
       "AbsoluteMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{C1BEF622-235C-4072-9A09-D80E80ADE098}|TargetSocialApp.API\\TargetSocialApp.API.csproj|solutionrelative:targetsocialapp.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{6A91584F-E1D6-447F-91FD-6FBAC7E814A5}|TargetSocialApp.Infrastructure\\TargetSocialApp.Infrastructure.csproj|c:\\users\\hamad\\source\\repos\\targetsocialapp\\targetsocialapp.infrastructure\\moduleinfrastructuredependencies.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{6A91584F-E1D6-447F-91FD-6FBAC7E814A5}|TargetSocialApp.Infrastructure\\TargetSocialApp.Infrastructure.csproj|solutionrelative:targetsocialapp.infrastructure\\moduleinfrastructuredependencies.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -38,11 +42,24 @@
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\appsettings.json",
               "RelativeDocumentMoniker": "TargetSocialApp.API\\appsettings.json",
-              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\appsettings.json*",
-              "RelativeToolTip": "TargetSocialApp.API\\appsettings.json*",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAABOAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\appsettings.json",
+              "RelativeToolTip": "TargetSocialApp.API\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-01-29T09:16:10.314Z",
+              "WhenOpened": "2026-01-30T12:11:51.545Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ModuleInfrastructureDependencies.cs",
+              "DocumentMoniker": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Infrastructure\\ModuleInfrastructureDependencies.cs",
+              "RelativeDocumentMoniker": "TargetSocialApp.Infrastructure\\ModuleInfrastructureDependencies.cs",
+              "ToolTip": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.Infrastructure\\ModuleInfrastructureDependencies.cs",
+              "RelativeToolTip": "TargetSocialApp.Infrastructure\\ModuleInfrastructureDependencies.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-30T12:11:42.376Z",
               "EditorCaption": ""
             }
           ]

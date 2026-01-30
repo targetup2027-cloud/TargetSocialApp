@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  targetsocialapp-api:
+    build: .
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Server=45.145.42.212,1433;Database=TargetSocialAppDb;User Id=sa;Password=Target@2026;TrustServerCertificate=True;Connect Timeout=120;"

@@ -156,6 +156,10 @@
               "target": "Package",
               "version": "[12.1.1, )"
             },
+            "Google.Apis.Auth": {
+              "target": "Package",
+              "version": "[1.73.0, )"
+            },
             "Mapster": {
               "target": "Package",
               "version": "[7.4.0, )"

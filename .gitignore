@@ -43,3 +43,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Sensitive Backend Documentation (contains keys, SHAs, credentials)
+BACKEND_COMPLETE_HANDOVER.md
+PROJECT_KEYS.md
+BACKEND_REQUIREMENTS.md
+BACKEND_HANDOVER.md
+MASTER_KEYS_AND_CONFIG.md

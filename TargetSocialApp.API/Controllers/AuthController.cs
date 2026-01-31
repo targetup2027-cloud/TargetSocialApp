@@ -74,5 +74,32 @@ namespace TargetSocialApp.API.Controllers
         }
 
       
+        [HttpPost("otp/request")]
+        public async Task<IActionResult> RequestOtp([FromBody] OtpRequest request)
+        {
+            var response = await _authService.RequestOtpAsync(request);
+            if (!response.Succeeded)
+            {
+                if (response.Message.Contains("Too many requests") || response.Message.Contains("locked"))
+                    return StatusCode(429, ApiResponseWrapper.Create(response, 429));
+
+                return BadRequest(ApiResponseWrapper.Create(response, 400));
+            }
+            return Ok(ApiResponseWrapper.Create(response));
+        }
+
+        [HttpPost("otp/verify")]
+        public async Task<IActionResult> VerifyOtp([FromBody] OtpVerifyRequest request)
+        {
+            var response = await _authService.VerifyOtpAsync(request);
+            if (!response.Succeeded)
+            {
+                if (response.Message.Contains("locked"))
+                    return StatusCode(429, ApiResponseWrapper.Create(response, 429));
+
+                return BadRequest(ApiResponseWrapper.Create(response, 400));
+            }
+            return Ok(ApiResponseWrapper.Create(response));
+        }
     }
 }

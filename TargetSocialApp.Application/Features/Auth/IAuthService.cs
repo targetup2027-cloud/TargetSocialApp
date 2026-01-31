@@ -14,5 +14,7 @@ namespace TargetSocialApp.Application.Features.Auth
         Task<Response<string>> ResetPasswordAsync(ResetPasswordRequest request);
         Task<Response<string>> VerifyEmailAsync(VerifyEmailRequest request);
         Task<Response<AuthResponse>> SocialLoginAsync(SocialLoginRequest request);
+        Task<Response<string>> RequestOtpAsync(OtpRequest request);
+        Task<Response<string>> VerifyOtpAsync(OtpVerifyRequest request);
     }
 }

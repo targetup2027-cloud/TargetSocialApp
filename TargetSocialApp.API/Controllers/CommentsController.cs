@@ -20,6 +20,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _commentService.AddCommentAsync(userId, postId, request);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -27,6 +28,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> GetComments(int postId)
         {
             var response = await _commentService.GetPostCommentsAsync(postId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -61,6 +63,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> GetReplies(int commentId)
         {
             var response = await _commentService.GetCommentRepliesAsync(commentId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -69,6 +72,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _commentService.LikeCommentAsync(userId, commentId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
     }

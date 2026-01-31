@@ -48,6 +48,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.ReactToMessageAsync(userId, messageId, request);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
     }

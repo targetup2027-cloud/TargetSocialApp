@@ -64,6 +64,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _friendService.GetFriendsListAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -72,6 +73,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _friendService.GetReceivedRequestsAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -80,6 +82,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _friendService.GetSentRequestsAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -88,6 +91,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _friendService.GetFriendSuggestionsAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -105,6 +109,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int followerId = 1;
             var response = await _friendService.UnfollowUserAsync(followerId, userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -112,6 +117,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> GetFollowers(int userId)
         {
             var response = await _friendService.GetFollowersAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -119,6 +125,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> GetFollowing(int userId)
         {
             var response = await _friendService.GetFollowingAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
     }

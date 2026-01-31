@@ -21,6 +21,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.GetUserConversationsAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -38,6 +39,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.CreateConversationAsync(userId, request);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -55,6 +57,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _messagingService.SendMessageAsync(userId, conversationId, request);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 

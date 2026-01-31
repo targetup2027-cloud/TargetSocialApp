@@ -20,6 +20,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1; 
             var response = await _storyService.CreateStoryAsync(userId, request);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -28,6 +29,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _storyService.GetFriendsStoriesAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -35,6 +37,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> GetStory(int storyId)
         {
             var response = await _storyService.GetStoryByIdAsync(storyId);
+            if (!response.Succeeded) return NotFound(ApiResponseWrapper.Create(response, 404));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -43,6 +46,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _storyService.DeleteStoryAsync(userId, storyId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -51,6 +55,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1; 
             var response = await _storyService.ViewStoryAsync(userId, storyId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -68,6 +73,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _storyService.CreateHighlightAsync(userId, request);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -84,6 +90,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> GetUserHighlights(int userId)
         {
             var response = await _storyService.GetUserHighlightsAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -92,6 +99,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _storyService.DeleteHighlightAsync(userId, highlightId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
     }

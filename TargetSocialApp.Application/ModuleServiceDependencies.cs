@@ -21,6 +21,7 @@ namespace TargetSocialApp.Application
         public static IServiceCollection AddApplicationDependencies(this IServiceCollection services)
         {
             // Register Services
+            services.AddMemoryCache();
             services.AddTransient<IAuthService, AuthService>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IPostService, PostService>();

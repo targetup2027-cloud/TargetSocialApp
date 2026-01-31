@@ -21,6 +21,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _privacyService.GetPrivacySettingsAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -29,6 +30,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _privacyService.UpdatePrivacySettingsAsync(userId, request);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -37,6 +39,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int currentUserId = 1;
             var response = await _privacyService.BlockUserAsync(currentUserId, userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -45,6 +48,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int currentUserId = 1;
             var response = await _privacyService.UnblockUserAsync(currentUserId, userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -53,6 +57,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int currentUserId = 1;
             var response = await _privacyService.GetBlockedUsersAsync(currentUserId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -70,6 +75,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int currentUserId = 1;
             var response = await _privacyService.Enable2FAAsync(currentUserId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
     }

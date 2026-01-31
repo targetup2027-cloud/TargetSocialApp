@@ -32,4 +32,16 @@ namespace TargetSocialApp.Application.Features.Auth.Requests
         public string Provider { get; set; } = null!; // Google, Facebook, Apple
         public string ProviderToken { get; set; } = null!;
     }
+
+    public class OtpRequest
+    {
+        public string PhoneNumber { get; set; } = null!;
+        public string Channel { get; set; } = "sms";
+    }
+
+    public class OtpVerifyRequest
+    {
+        public string PhoneNumber { get; set; } = null!;
+        public string Code { get; set; } = null!;
+    }
 }

@@ -22,6 +22,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1; // Claims
             var response = await _postService.CreatePostAsync(userId, request);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -56,6 +57,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1; 
             var response = await _postService.GetFeedAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -64,6 +66,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.GetFriendsFeedAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -72,6 +75,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.GetFollowingFeedAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -80,6 +84,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.LikePostAsync(userId, postId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -88,6 +93,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.ReactToPostAsync(userId, postId, request);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -95,6 +101,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> GetReactions(int postId)
         {
             var response = await _postService.GetPostReactionsAsync(postId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -103,6 +110,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.SharePostAsync(userId, postId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -111,6 +119,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.SavePostAsync(userId, postId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -119,6 +128,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.UnsavePostAsync(userId, postId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -127,6 +137,7 @@ namespace TargetSocialApp.API.Controllers
         {
             int userId = 1;
             var response = await _postService.GetSavedPostsAsync(userId);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 

@@ -19,6 +19,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> Search([FromQuery] string query)
         {
             var response = await _searchService.SearchGeneralAsync(query);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -26,6 +27,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> SearchUsers([FromQuery] string query)
         {
             var response = await _searchService.SearchUsersAsync(query);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -33,6 +35,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> SearchPosts([FromQuery] string query)
         {
             var response = await _searchService.SearchPostsAsync(query);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -40,6 +43,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> SearchHashtags([FromQuery] string query)
         {
             var response = await _searchService.SearchHashtagsAsync(query);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -47,6 +51,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> GetSuggestions([FromQuery] string query)
         {
             var response = await _searchService.GetSuggestionsAsync(query);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 
@@ -54,6 +59,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> GetTrending()
         {
             var response = await _searchService.GetTrendingPostsAsync();
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
     }

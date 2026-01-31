@@ -11,6 +11,10 @@ using Microsoft.EntityFrameworkCore;
 using Google.Apis.Auth;
 using Microsoft.Extensions.Configuration;
 using TargetSocialApp.Domain.Enums;
+using Microsoft.Extensions.Caching.Memory;
+using Twilio;
+using Twilio.Rest.Verify.V2.Service;
+using Twilio.Exceptions;
 
 namespace TargetSocialApp.Application.Features.Auth
 {
@@ -21,19 +25,22 @@ namespace TargetSocialApp.Application.Features.Auth
         private readonly IValidator<RegisterRequest> _registerValidator;
         private readonly IValidator<LoginRequest> _loginValidator;
         private readonly IConfiguration _configuration;
+        private readonly IMemoryCache _cache;
 
         public AuthService(
             IUnitOfWork unitOfWork,
             IGenericRepository<User> userRepository,
             IValidator<RegisterRequest> registerValidator,
             IValidator<LoginRequest> loginValidator,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IMemoryCache cache)
         {
             _unitOfWork = unitOfWork;
             _userRepository = userRepository;
             _registerValidator = registerValidator;
             _loginValidator = loginValidator;
             _configuration = configuration;
+            _cache = cache;
         }
 
         public async Task<Response<string>> RegisterAsync(RegisterRequest request)
@@ -157,6 +164,84 @@ namespace TargetSocialApp.Application.Features.Auth
         {
             // Placeholder
             return Response<string>.Success("Email verified successfully");
+        }
+        public async Task<Response<string>> RequestOtpAsync(OtpRequest request)
+        {
+            var accountSid = _configuration["Authentication:Twilio:AccountSid"];
+            var authToken = _configuration["Authentication:Twilio:AuthToken"];
+            var serviceSid = _configuration["Authentication:Twilio:ServiceSid"];
+
+            var requestKey = $"otp_req_{request.PhoneNumber}";
+            if (_cache.TryGetValue(requestKey, out int attempts) && attempts >= 3)
+            {
+                return Response<string>.Failure("Too many requests. Please wait 10 minutes.");
+            }
+
+            try
+            {
+                TwilioClient.Init(accountSid, authToken);
+
+                var verification = await VerificationResource.CreateAsync(
+                    to: request.PhoneNumber,
+                    channel: request.Channel,
+                    pathServiceSid: serviceSid
+                );
+
+                _cache.Set(requestKey, attempts + 1, TimeSpan.FromMinutes(10));
+
+                return Response<string>.Success(verification.Status);
+            }
+            catch (TwilioException ex)
+            {
+                return Response<string>.Failure(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return Response<string>.Failure($"An error occurred: {ex.Message}");
+            }
+        }
+
+        public async Task<Response<string>> VerifyOtpAsync(OtpVerifyRequest request)
+        {
+            var accountSid = _configuration["Authentication:Twilio:AccountSid"];
+            var authToken = _configuration["Authentication:Twilio:AuthToken"];
+            var serviceSid = _configuration["Authentication:Twilio:ServiceSid"];
+
+            var lockoutKey = $"otp_lock_{request.PhoneNumber}";
+            if (_cache.TryGetValue(lockoutKey, out int failedAttempts) && failedAttempts >= 5)
+            {
+                return Response<string>.Failure("Account temporarily locked due to multiple failed attempts. Try again in 15 minutes.");
+            }
+
+            try
+            {
+                TwilioClient.Init(accountSid, authToken);
+
+                var verificationCheck = await VerificationCheckResource.CreateAsync(
+                    to: request.PhoneNumber,
+                    code: request.Code,
+                    pathServiceSid: serviceSid
+                );
+
+                if (verificationCheck.Status == "approved")
+                {
+                    _cache.Remove(lockoutKey);
+                    return Response<string>.Success("Verification successful");
+                }
+                else
+                {
+                    _cache.Set(lockoutKey, failedAttempts + 1, TimeSpan.FromMinutes(15));
+                    return Response<string>.Failure("Invalid code");
+                }
+            }
+            catch (TwilioException ex)
+            {
+                return Response<string>.Failure(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return Response<string>.Failure($"An error occurred: {ex.Message}");
+            }
         }
     }
 }

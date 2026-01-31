@@ -185,4 +185,10 @@ C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\TargetSocialApp.API.sourcelink.json
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\Npgsql.dll
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\Google.Apis.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\Google.Apis.Auth.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\Google.Apis.Core.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\System.Management.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\Twilio.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\runtimes\win\lib\net7.0\System.Management.dll
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt

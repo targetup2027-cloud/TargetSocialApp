@@ -20,6 +20,7 @@ namespace TargetSocialApp.API.Controllers
         public async Task<IActionResult> Upload([FromForm] UploadMediaRequest request)
         {
             var response = await _mediaService.UploadMediaAsync(request);
+            if (!response.Succeeded) return BadRequest(ApiResponseWrapper.Create(response, 400));
             return Ok(ApiResponseWrapper.Create(response));
         }
 

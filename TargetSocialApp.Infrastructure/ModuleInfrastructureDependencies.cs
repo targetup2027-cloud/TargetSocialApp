@@ -18,8 +18,7 @@ namespace TargetSocialApp.Infrastructure
         try
         {
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(connectionString)
-                       .UseLazyLoadingProxies());
+                options.UseSqlServer(connectionString));
         }
         catch (Exception ex)
         {

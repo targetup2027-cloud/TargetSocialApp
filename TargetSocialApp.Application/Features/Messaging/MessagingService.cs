@@ -95,7 +95,9 @@ namespace TargetSocialApp.Application.Features.Messaging
 
         public async Task<Response<string>> DeleteConversationAsync(int userId, int conversationId)
         {
-             var conversation = await _conversationRepository.GetByIdAsync(conversationId);
+            var conversation = await _conversationRepository.GetTableAsTracking()
+                .Include(c => c.Participants)
+                .FirstOrDefaultAsync(c => c.Id == conversationId);
              if (conversation == null) return Response<string>.Failure("Conversation not found");
              
              if(!conversation.Participants.Any(p => p.UserId == userId)) return Response<string>.Failure("Unauthorized");

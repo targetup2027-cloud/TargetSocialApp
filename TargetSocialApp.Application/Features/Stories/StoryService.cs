@@ -70,7 +70,9 @@ namespace TargetSocialApp.Application.Features.Stories
 
         public async Task<Response<StoryHighlightDto>> UpdateHighlightAsync(int userId, int highlightId, CreateHighlightRequest request)
         {
-            var highlight = await _highlightRepository.GetByIdAsync(highlightId);
+            var highlight = await _highlightRepository.GetTableAsTracking()
+                .Include(h => h.Items)
+                .FirstOrDefaultAsync(h => h.Id == highlightId);
             if(highlight == null) return Response<StoryHighlightDto>.Failure("Not found");
             if(highlight.UserId != userId) return Response<StoryHighlightDto>.Failure("Unauthorized");
 

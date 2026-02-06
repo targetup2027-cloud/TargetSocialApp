@@ -1,7 +1,6 @@
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Domain\bin\Debug\net9.0\TargetSocialApp.Domain.deps.json
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Domain\bin\Debug\net9.0\TargetSocialApp.Domain.dll
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Domain\bin\Debug\net9.0\TargetSocialApp.Domain.pdb
-C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Domain\obj\Debug\net9.0\TargetSocialApp.Domain.csproj.AssemblyReference.cache
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Domain\obj\Debug\net9.0\TargetSocialApp.Domain.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Domain\obj\Debug\net9.0\TargetSocialApp.Domain.AssemblyInfoInputs.cache
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.Domain\obj\Debug\net9.0\TargetSocialApp.Domain.AssemblyInfo.cs

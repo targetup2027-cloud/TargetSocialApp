@@ -1,5 +1,8 @@
 ﻿using TargetSocialApp.Application;
 using TargetSocialApp.Infrastructure;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
+using Serilog;
 
 namespace TargetSocialApp.API
 {
@@ -8,6 +11,15 @@ namespace TargetSocialApp.API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // -----------------------------
+            // 0️⃣ Serilog Configuration
+            // -----------------------------
+            builder.Host.UseSerilog((context, services, configuration) => configuration
+                .ReadFrom.Configuration(context.Configuration)
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .WriteTo.File("logs/log-.txt", rollingInterval: RollingInterval.Day));
 
             // -----------------------------
             // 1️⃣ Layer Dependencies
@@ -47,16 +59,31 @@ namespace TargetSocialApp.API
                 TargetSocialApp.Application.Common.Interfaces.IChatNotifier,
                 TargetSocialApp.API.Services.ChatNotifier>();
 
+            // -----------------------------
+            // 5.5️⃣ Rate Limiting
+            // -----------------------------
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? httpContext.Request.Headers.Host.ToString(),
+                        factory: partition => new FixedWindowRateLimiterOptions
+                        {
+                            AutoReplenishment = true,
+                            PermitLimit = 100,
+                            QueueLimit = 0,
+                            Window = TimeSpan.FromMinutes(1)
+                        }));
+                
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            });
+
             var app = builder.Build();
 
             // -----------------------------
-            // Diagnosis: Log every request
+            // Diagnosis: Serilog Request Logging
             // -----------------------------
-            app.Use(async (context, next) =>
-            {
-                Console.WriteLine($"[Diagnosis] Request: {context.Request.Method} {context.Request.Path}");
-                await next();
-            });
+            app.UseSerilogRequestLogging();
 
             // -----------------------------
             // 6️⃣ Root Health Check (مهم ل Railway)
@@ -73,6 +100,7 @@ namespace TargetSocialApp.API
             // app.UseHttpsRedirection();
 
             app.UseCors("AllowAll");
+            app.UseRateLimiter(); // Add Rate Limiter Middleware
             app.UseAuthorization();
 
             app.MapControllers();

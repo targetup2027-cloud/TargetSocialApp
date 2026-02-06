@@ -288,7 +288,10 @@ namespace TargetSocialApp.Application.Features.Posts
 
         public async Task<Response<PostDto>> UpdatePostAsync(int userId, int postId, UpdatePostRequest request)
         {
-            var post = await _postRepository.GetByIdAsync(postId);
+            // Refactored to include Media explicitly
+            var post = await _postRepository.GetTableAsTracking()
+                .Include(p => p.Media)
+                .FirstOrDefaultAsync(p => p.Id == postId);
             if (post == null) return Response<PostDto>.Failure("Post not found");
             if (post.UserId != userId) return Response<PostDto>.Failure("Unauthorized");
 

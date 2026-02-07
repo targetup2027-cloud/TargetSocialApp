@@ -10,4 +10,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appTitle => 'U-Axis';
+
+  @override
+  String get comments => 'Comments';
+
+  @override
+  String get shares => 'Shares';
+
+  @override
+  String get react => 'React';
+
+  @override
+  String get comment => 'Comment';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get like => 'Like';
+
+  @override
+  String get reply => 'Reply';
+
+  @override
+  String get viewMoreComments => 'View more comments';
 }

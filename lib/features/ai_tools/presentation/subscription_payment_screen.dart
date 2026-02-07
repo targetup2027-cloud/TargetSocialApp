@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../app/theme/theme_extensions.dart';
 
 class SubscriptionPaymentScreen extends StatefulWidget {
   final String planName;
@@ -7,6 +8,8 @@ class SubscriptionPaymentScreen extends StatefulWidget {
   final String planLimit;
   final List<String> planFeatures;
   final String agentName;
+  final String? successButtonText;
+  final String? successRoute;
 
   const SubscriptionPaymentScreen({
     super.key,
@@ -15,6 +18,8 @@ class SubscriptionPaymentScreen extends StatefulWidget {
     required this.planLimit,
     required this.planFeatures,
     required this.agentName,
+    this.successButtonText,
+    this.successRoute,
   });
 
   @override
@@ -34,18 +39,18 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: context.scaffoldBg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: context.onSurface),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
+        title: Text(
           'Subscribe',
           style: TextStyle(
-            color: Colors.white,
+            color: context.onSurface,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -59,18 +64,18 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
           children: [
             _buildPlanSummary(),
             const SizedBox(height: 32),
-            _buildPaymentMethods(),
+            _buildPaymentMethods(context),
             const SizedBox(height: 32),
-            _buildPromoCode(),
+            _buildPromoCode(context),
             const SizedBox(height: 32),
-            _buildOrderSummary(),
+            _buildOrderSummary(context),
             const SizedBox(height: 32),
-            _buildSecurityBadges(),
+            _buildSecurityBadges(context),
             const SizedBox(height: 100),
           ],
         ),
       ),
-      bottomNavigationBar: _buildCheckoutButton(),
+      bottomNavigationBar: _buildCheckoutButton(context),
     );
   }
 
@@ -179,14 +184,14 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
     );
   }
 
-  Widget _buildPaymentMethods() {
+  Widget _buildPaymentMethods(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Payment Method',
           style: TextStyle(
-            color: Colors.white,
+            color: context.onSurface,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -202,10 +207,10 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF6366F1).withValues(alpha: 0.15) : const Color(0xFF1A1A1F),
+                color: isSelected ? const Color(0xFF6366F1).withValues(alpha: 0.15) : context.cardColor,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: isSelected ? const Color(0xFF6366F1) : Colors.white.withValues(alpha: 0.05),
+                  color: isSelected ? const Color(0xFF6366F1) : context.dividerColor,
                   width: isSelected ? 2 : 1,
                 ),
               ),
@@ -217,12 +222,12 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
                     decoration: BoxDecoration(
                       color: isSelected 
                         ? const Color(0xFF6366F1).withValues(alpha: 0.2) 
-                        : Colors.white.withValues(alpha: 0.05),
+                        : context.onSurface.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       method['icon'],
-                      color: isSelected ? const Color(0xFF8B5CF6) : Colors.white.withValues(alpha: 0.7),
+                      color: isSelected ? const Color(0xFF8B5CF6) : context.iconColor,
                       size: 24,
                     ),
                   ),
@@ -234,7 +239,7 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
                         Text(
                           method['name'],
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.onSurface,
                             fontSize: 16,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                           ),
@@ -243,7 +248,7 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
                         Text(
                           method['subtitle'],
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: context.onSurfaceVariant,
                             fontSize: 12,
                           ),
                         ),
@@ -258,7 +263,7 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
                       shape: BoxShape.circle,
                       color: isSelected ? const Color(0xFF8B5CF6) : Colors.transparent,
                       border: Border.all(
-                        color: isSelected ? const Color(0xFF8B5CF6) : Colors.white.withValues(alpha: 0.3),
+                        color: isSelected ? const Color(0xFF8B5CF6) : context.dividerColor,
                         width: 2,
                       ),
                     ),
@@ -275,24 +280,24 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
     );
   }
 
-  Widget _buildPromoCode() {
+  Widget _buildPromoCode(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1F),
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: context.dividerColor),
       ),
       child: Row(
         children: [
-          Icon(Icons.discount_outlined, color: Colors.white.withValues(alpha: 0.5), size: 20),
+          Icon(Icons.discount_outlined, color: context.hintColor, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: context.onSurface, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Enter promo code',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                hintStyle: TextStyle(color: context.hintColor),
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: EdgeInsets.zero,
@@ -319,7 +324,7 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
     );
   }
 
-  Widget _buildOrderSummary() {
+  Widget _buildOrderSummary(BuildContext context) {
     final price = double.tryParse(widget.planPrice.replaceAll('\$', '')) ?? 0;
     final tax = price * 0.1;
     final total = price + tax;
@@ -327,38 +332,38 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1F),
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: context.dividerColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Order Summary',
             style: TextStyle(
-              color: Colors.white,
+              color: context.onSurface,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 20),
-          _buildSummaryRow('${widget.planName} Plan', '\$${price.toStringAsFixed(2)}'),
+          _buildSummaryRow(context, '${widget.planName} Plan', '\$${price.toStringAsFixed(2)}'),
           const SizedBox(height: 12),
-          _buildSummaryRow('Tax (10%)', '\$${tax.toStringAsFixed(2)}'),
+          _buildSummaryRow(context, 'Tax (10%)', '\$${tax.toStringAsFixed(2)}'),
           const SizedBox(height: 16),
           Container(
             height: 1,
-            color: Colors.white.withValues(alpha: 0.1),
+            color: context.dividerColor,
           ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Total',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -378,21 +383,21 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value) {
+  Widget _buildSummaryRow(BuildContext context, String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.6),
+            color: context.onSurfaceVariant,
             fontSize: 14,
           ),
         ),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: context.onSurface,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
@@ -401,16 +406,16 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
     );
   }
 
-  Widget _buildSecurityBadges() {
+  Widget _buildSecurityBadges(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.lock_outline, color: Colors.white.withValues(alpha: 0.4), size: 16),
+        Icon(Icons.lock_outline, color: context.hintColor, size: 16),
         const SizedBox(width: 8),
         Text(
           'Secured by SSL encryption',
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.4),
+            color: context.hintColor,
             fontSize: 12,
           ),
         ),
@@ -419,7 +424,7 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
           width: 4,
           height: 4,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.3),
+            color: context.hintColor.withValues(alpha: 0.3),
             shape: BoxShape.circle,
           ),
         ),
@@ -427,7 +432,7 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
         Text(
           'Cancel anytime',
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.4),
+            color: context.hintColor,
             fontSize: 12,
           ),
         ),
@@ -435,12 +440,12 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
     );
   }
 
-  Widget _buildCheckoutButton() {
+  Widget _buildCheckoutButton(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F1115),
-        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+        color: context.cardColor,
+        border: Border(top: BorderSide(color: context.dividerColor)),
       ),
       child: SafeArea(
         child: Column(
@@ -481,7 +486,7 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
             Text(
               'By subscribing, you agree to our Terms of Service',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.4),
+                color: context.hintColor,
                 fontSize: 11,
               ),
               textAlign: TextAlign.center,
@@ -508,7 +513,7 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => Dialog(
-        backgroundColor: const Color(0xFF1A1A1F),
+        backgroundColor: context.cardColor,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -529,10 +534,10 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
+              Text(
                 'Subscription Activated!',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.onSurface,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                 ),
@@ -541,7 +546,7 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
               Text(
                 'You now have access to ${widget.agentName} with the ${widget.planName} plan.',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: context.onSurfaceVariant,
                   fontSize: 14,
                   height: 1.5,
                 ),
@@ -553,7 +558,7 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    context.go('/app');
+                    context.go(widget.successRoute ?? '/app');
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF8B5CF6),
@@ -563,9 +568,9 @@ class _SubscriptionPaymentScreenState extends State<SubscriptionPaymentScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Start Using Agent',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  child: Text(
+                    widget.successButtonText ?? 'Start Using Agent',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ),

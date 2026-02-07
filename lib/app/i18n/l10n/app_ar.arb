@@ -1,4 +1,12 @@
 {
   "@@locale": "ar",
-  "appTitle": "يو-أكسيس"
+  "appTitle": "يو-أكسيس",
+  "comments": "تعليقات",
+  "shares": "مشاركات",
+  "react": "تفاعل",
+  "comment": "تعليق",
+  "share": "مشاركة",
+  "like": "إعجاب",
+  "reply": "رد",
+  "viewMoreComments": "عرض المزيد من التعليقات"
 }

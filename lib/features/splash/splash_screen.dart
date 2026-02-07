@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../auth/application/auth_controller.dart';
 import '../../data/seed/auth_seed.dart';
+import '../../app/theme/theme_extensions.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -51,33 +52,34 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Colors.black,
+    return Scaffold(
+      backgroundColor: context.scaffoldBg,
       body: Center(
         child: ShatteredLogoReveal(
+          color: context.onSurface,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'U-ΛXIS',
                 style: TextStyle(
-                  color: Color(0xFFFFFFFF),
+                  color: context.onSurface,
                   fontSize: 42,
                   fontWeight: FontWeight.w300,
                   letterSpacing: 6,
                   shadows: [
                     Shadow(
-                      color: Color(0xFFFFFFFF),
+                      color: context.onSurface,
                       blurRadius: 30,
                       offset: Offset.zero,
                     ),
                     Shadow(
-                      color: Color(0x99FFFFFF),
+                      color: context.onSurface.withValues(alpha: 0.6),
                       blurRadius: 60,
                       offset: Offset.zero,
                     ),
                     Shadow(
-                      color: Color(0x66FFFFFF),
+                      color: context.onSurface.withValues(alpha: 0.4),
                       blurRadius: 90,
                       offset: Offset.zero,
                     ),
@@ -88,13 +90,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               Text(
                 'BUSINESS INTELLIGENCE PLATFORM',
                 style: TextStyle(
-                  color: Color(0x99FFFFFF),
+                  color: context.onSurface.withValues(alpha: 0.6),
                   fontSize: 10,
                   fontWeight: FontWeight.w400,
                   letterSpacing: 4,
                   shadows: [
                     Shadow(
-                      color: Color(0x66FFFFFF),
+                      color: context.onSurface.withValues(alpha: 0.4),
                       blurRadius: 10,
                       offset: Offset.zero,
                     ),
@@ -111,10 +113,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
 class ShatteredLogoReveal extends StatefulWidget {
   final Widget child;
+  final Color color;
 
   const ShatteredLogoReveal({
     super.key,
     required this.child,
+    required this.color,
   });
 
   @override
@@ -203,6 +207,7 @@ class _ShatteredLogoRevealState extends State<ShatteredLogoReveal>
                 particles: _particles,
                 progress: _controller.value,
                 opacity: _particleFade.value,
+                color: widget.color,
               ),
               size: const Size(400, 400),
             ),
@@ -242,11 +247,13 @@ class _ParticlePainter extends CustomPainter {
   final List<_Particle> particles;
   final double progress;
   final double opacity;
+  final Color color;
 
   _ParticlePainter({
     required this.particles,
     required this.progress,
     required this.opacity,
+    required this.color,
   });
 
   @override
@@ -263,7 +270,7 @@ class _ParticlePainter extends CustomPainter {
       final currentX = centerX + particle.x + math.cos(particle.angle) * distance;
       final currentY = centerY + particle.y + math.sin(particle.angle) * distance;
 
-      paint.color = Color(0xFFFFFFFF).withValues(alpha: opacity * 0.7);
+      paint.color = color.withValues(alpha: opacity * 0.7);
 
       canvas.save();
       canvas.translate(currentX, currentY);
@@ -278,7 +285,7 @@ class _ParticlePainter extends CustomPainter {
 
       canvas.drawPath(path, paint);
 
-      paint.color = Color(0xFFFFFFFF).withValues(alpha: opacity * 0.3);
+      paint.color = color.withValues(alpha: opacity * 0.3);
       canvas.drawCircle(Offset.zero, particle.size * 0.4, paint);
 
       canvas.restore();
@@ -287,6 +294,8 @@ class _ParticlePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ParticlePainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.opacity != opacity;
+    return oldDelegate.progress != progress || 
+           oldDelegate.opacity != opacity ||
+           oldDelegate.color != color;
   }
 }

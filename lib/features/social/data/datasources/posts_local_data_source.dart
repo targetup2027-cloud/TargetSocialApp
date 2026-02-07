@@ -21,9 +21,9 @@ abstract class PostsLocalDataSource {
 class PostsLocalDataSourceImpl implements PostsLocalDataSource {
   final SharedPreferences sharedPreferences;
 
-  static const String feedCacheKey = 'CACHED_FEED';
-  static const String userPostsCachePrefix = 'CACHED_USER_POSTS_';
-  static const String postCachePrefix = 'CACHED_POST_';
+  static const String feedCacheKey = 'CACHED_FEED_V2';
+  static const String userPostsCachePrefix = 'CACHED_USER_POSTS_V2_';
+  static const String postCachePrefix = 'CACHED_POST_V2_';
   static const String bookmarksKey = 'BOOKMARKED_POSTS';
   static const String draftsKey = 'DRAFT_POSTS';
 

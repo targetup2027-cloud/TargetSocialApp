@@ -1,5 +1,7 @@
 import '../../domain/entities/post.dart';
 
+import '../../models/post_data.dart';
+
 class PostModel extends Post {
   const PostModel({
     required super.id,
@@ -12,6 +14,7 @@ class PostModel extends Post {
     super.mediaUrls,
     super.mediaType,
     super.likesCount,
+    super.reactionCounts,
     super.commentsCount,
     super.sharesCount,
     super.isLiked,
@@ -24,21 +27,50 @@ class PostModel extends Post {
   });
 
   factory PostModel.fromJson(Map<String, dynamic> json) {
+    final mediaList = json['media'] as List<dynamic>? ?? [];
+    final mediaUrls = mediaList
+        .map((m) => (m as Map<String, dynamic>)['url'] as String? ?? '')
+        .where((url) => url.isNotEmpty)
+        .toList();
+
+    String? mediaType;
+    if (mediaList.isNotEmpty) {
+      final firstMedia = mediaList.first as Map<String, dynamic>;
+      final type = firstMedia['mediaType'];
+      if (type == 0 || type == 'image') {
+        mediaType = 'image';
+      } else if (type == 1 || type == 'video') {
+        mediaType = 'video';
+      }
+    }
+
+    final userName = json['userName'] as String? ?? '';
+
     return PostModel(
-      id: json['id'] as String,
-      authorId: json['authorId'] as String,
-      authorName: json['authorName'] as String,
-      authorUsername: json['authorUsername'] as String,
-      authorAvatarUrl: json['authorAvatarUrl'] as String?,
+      id: json['id'].toString(),
+      authorId: (json['userId'] ?? json['authorId'] ?? '').toString(),
+      authorName: userName,
+      authorUsername: userName.toLowerCase().replaceAll(' ', '_'),
+      authorAvatarUrl: json['userAvatarUrl'] as String? ?? json['authorAvatarUrl'] as String?,
       authorIsVerified: json['authorIsVerified'] as bool? ?? false,
       content: json['content'] as String?,
-      mediaUrls: (json['mediaUrls'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
-      mediaType: json['mediaType'] as String?,
-      likesCount: json['likesCount'] as int? ?? 0,
+      mediaUrls: mediaUrls,
+      mediaType: mediaType,
+      likesCount: json['reactionsCount'] as int? ?? json['likesCount'] as int? ?? 0,
+      reactionCounts: (json['reactionCounts'] as Map<String, dynamic>?)?.map(
+            (k, v) => MapEntry(
+              ReactionType.values.firstWhere(
+                (e) => e.name == k,
+                orElse: () => ReactionType.like,
+              ),
+              v as int,
+            ),
+          ) ??
+          {},
       commentsCount: json['commentsCount'] as int? ?? 0,
       sharesCount: json['sharesCount'] as int? ?? 0,
-      isLiked: json['isLiked'] as bool? ?? false,
-      isBookmarked: json['isBookmarked'] as bool? ?? false,
+      isLiked: json['isLikedByCurrentUser'] as bool? ?? json['isLiked'] as bool? ?? false,
+      isBookmarked: json['isSavedByCurrentUser'] as bool? ?? json['isBookmarked'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt'] as String) : null,
       location: json['location'] as String?,
@@ -59,6 +91,7 @@ class PostModel extends Post {
       'mediaUrls': mediaUrls,
       'mediaType': mediaType,
       'likesCount': likesCount,
+      'reactionCounts': reactionCounts.map((k, v) => MapEntry(k.name, v)),
       'commentsCount': commentsCount,
       'sharesCount': sharesCount,
       'isLiked': isLiked,
@@ -89,18 +122,20 @@ class CommentModel extends Comment {
   });
 
   factory CommentModel.fromJson(Map<String, dynamic> json) {
+    final userName = json['userName'] as String? ?? json['authorName'] as String? ?? '';
+
     return CommentModel(
-      id: json['id'] as String,
-      postId: json['postId'] as String,
-      authorId: json['authorId'] as String,
-      authorName: json['authorName'] as String,
-      authorUsername: json['authorUsername'] as String,
-      authorAvatarUrl: json['authorAvatarUrl'] as String?,
-      content: json['content'] as String,
-      likesCount: json['likesCount'] as int? ?? 0,
-      isLiked: json['isLiked'] as bool? ?? false,
+      id: json['id'].toString(),
+      postId: (json['postId'] ?? '').toString(),
+      authorId: (json['userId'] ?? json['authorId'] ?? '').toString(),
+      authorName: userName,
+      authorUsername: userName.toLowerCase().replaceAll(' ', '_'),
+      authorAvatarUrl: json['userAvatarUrl'] as String? ?? json['authorAvatarUrl'] as String?,
+      content: json['content'] as String? ?? '',
+      likesCount: json['reactionsCount'] as int? ?? json['likesCount'] as int? ?? 0,
+      isLiked: json['isLikedByCurrentUser'] as bool? ?? json['isLiked'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      parentCommentId: json['parentCommentId'] as String?,
+      parentCommentId: json['parentCommentId']?.toString(),
       repliesCount: json['repliesCount'] as int? ?? 0,
     );
   }

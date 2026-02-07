@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../app/theme/theme_extensions.dart';
 import '../../../core/widgets/uaxis_drawer.dart';
 import '../../../core/widgets/universe_back_button.dart';
 
@@ -21,8 +22,58 @@ class _AIToolsScreenState extends State<AIToolsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Agent Data
+    final allAgents = [
+      {
+        'title': 'SmartWriter Pro',
+        'category': 'Creative',
+        'badge': "Editor's Choice",
+        'badgeColor': const Color(0xFFFFB800),
+        'description': 'AI-powered content creation for blogs, emails, and social media',
+        'rating': '4.9',
+        'users': '45,237 users',
+        'successRate': '98%',
+        'price': '\$29.99/month',
+        'provider': 'by ContentLab AI',
+        'iconColor': const Color(0xFF3B82F6),
+        'icon': Icons.edit_note,
+      },
+      {
+        'title': 'DataInsight Engine',
+        'category': 'Analytics',
+        'badge': 'Trending',
+        'badgeColor': const Color(0xFF00D1FF),
+        'description': 'Advanced analytics and predictive modeling for business intelligence',
+        'rating': '4.8',
+        'users': '23,456 users',
+        'successRate': '96%',
+        'price': '\$79.99/month',
+        'provider': 'by Analytix Corp',
+        'iconColor': const Color(0xFF8B5CF6),
+        'icon': Icons.bar_chart_rounded,
+      },
+      {
+        'title': 'AutoFlow Assistant',
+        'category': 'Productivity',
+        'badge': 'Hot',
+        'badgeColor': const Color(0xFFEF4444),
+        'description': 'Automate workflows and repetitive tasks across your tools',
+        'rating': '4.7',
+        'users': '34,891 users',
+        'successRate': '94%',
+        'price': 'Contact Us',
+        'provider': 'by FlowMasters',
+        'iconColor': const Color(0xFFF59E0B),
+        'icon': Icons.bolt_rounded,
+      },
+    ];
+
+    final filteredAgents = _selectedCategory == 0
+        ? allAgents
+        : allAgents.where((agent) => agent['category'] == _categories[_selectedCategory]).toList();
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: context.scaffoldBg,
       drawer: const UAxisDrawer(),
       body: Stack(
         children: [
@@ -46,45 +97,30 @@ class _AIToolsScreenState extends State<AIToolsScreen> {
                 ),
                 SliverList(
                   delegate: SliverChildListDelegate([
-                    const _AgentCard(
-                      title: 'SmartWriter Pro',
-                      badge: "Editor's Choice",
-                      badgeColor: Color(0xFFFFB800),
-                      description: 'AI-powered content creation for blogs, emails, and social media',
-                      rating: '4.9',
-                      users: '45,237 users',
-                      successRate: '98%',
-                      price: '\$29.99/month',
-                      provider: 'by ContentLab AI',
-                      iconColor: Color(0xFF3B82F6),
-                      icon: Icons.edit_note,
-                    ),
-                    const _AgentCard(
-                      title: 'DataInsight Engine',
-                      badge: 'Trending',
-                      badgeColor: Color(0xFF00D1FF),
-                      description: 'Advanced analytics and predictive modeling for business intelligence',
-                      rating: '4.8',
-                      users: '23,456 users',
-                      successRate: '96%',
-                      price: '\$79.99/month',
-                      provider: 'by Analytix Corp',
-                      iconColor: Color(0xFF8B5CF6),
-                      icon: Icons.bar_chart_rounded,
-                    ),
-                    const _AgentCard(
-                      title: 'AutoFlow Assistant',
-                      badge: 'Hot',
-                      badgeColor: Color(0xFFEF4444),
-                      description: 'Automate workflows and repetitive tasks across your tools',
-                      rating: '4.7',
-                      users: '34,891 users',
-                      successRate: '94%',
-                      price: 'Contact Us',
-                      provider: 'by FlowMasters',
-                      iconColor: Color(0xFFF59E0B),
-                      icon: Icons.bolt_rounded,
-                    ),
+                    if (filteredAgents.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(40.0),
+                        child: Center(
+                          child: Text(
+                            'No agents found in this category',
+                            style: TextStyle(color: context.hintColor),
+                          ),
+                        ),
+                      )
+                    else
+                      ...filteredAgents.map((agent) => _AgentCard(
+                            title: agent['title'] as String,
+                            badge: agent['badge'] as String,
+                            badgeColor: agent['badgeColor'] as Color,
+                            description: agent['description'] as String,
+                            rating: agent['rating'] as String,
+                            users: agent['users'] as String,
+                            successRate: agent['successRate'] as String,
+                            price: agent['price'] as String,
+                            provider: agent['provider'] as String,
+                            iconColor: agent['iconColor'] as Color,
+                            icon: agent['icon'] as IconData,
+                          )),
                     const _WorkflowSection(),
                     const _NewReleaseBanner(),
                     const SizedBox(height: 100),
@@ -110,25 +146,25 @@ class _MarketplaceHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.fromLTRB(24, 20, 24, 16),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'AI Marketplace',
             style: TextStyle(
-              color: Colors.white,
+              color: context.onSurface,
               fontSize: 28,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.5,
             ),
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
             'Discover AI agents, tools, and workflows',
             style: TextStyle(
-              color: Color(0xFF94A3B8),
+              color: context.onSurfaceVariant,
               fontSize: 14,
             ),
           ),
@@ -148,22 +184,22 @@ class _SearchBar extends StatelessWidget {
       child: Container(
         height: 48,
         decoration: BoxDecoration(
-          color: const Color(0xFF0F0F12),
+          color: context.cardColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+          border: Border.all(color: context.dividerColor),
         ),
         child: Row(
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: Icon(Icons.search, color: Colors.white.withValues(alpha: 0.3), size: 20),
+              child: Icon(Icons.search, color: context.hintColor, size: 20),
             ),
             Expanded(
               child: TextField(
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+                style: TextStyle(color: context.onSurface, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Search AI agents, tools, workflows...',
-                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 14),
+                  hintStyle: TextStyle(color: context.hintColor, fontSize: 14),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -202,6 +238,10 @@ class _CategoryFilters extends StatelessWidget {
           itemCount: categories.length,
           itemBuilder: (context, index) {
             final isSelected = selectedIndex == index;
+            // Use cyan for selection if dark, or primary if light?
+            // Sticking to cyan for AI theme but ensuring text contrast
+            final selectedBg = const Color(0xFF00D1FF);
+            
             return Padding(
               padding: const EdgeInsets.only(right: 10),
               child: GestureDetector(
@@ -212,14 +252,14 @@ class _CategoryFilters extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 18),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF00D1FF) : const Color(0xFF1A1A1F),
+                    color: isSelected ? selectedBg : context.cardColor,
                     borderRadius: BorderRadius.circular(20),
-                    border: isSelected ? null : Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                    border: isSelected ? null : Border.all(color: context.dividerColor),
                   ),
                   child: Text(
                     categories[index],
                     style: TextStyle(
-                      color: isSelected ? Colors.black : Colors.white.withValues(alpha: 0.7),
+                      color: isSelected ? Colors.black : context.onSurface.withValues(alpha: 0.7),
                       fontSize: 13,
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                     ),
@@ -248,18 +288,18 @@ class _SortAndFilters extends StatelessWidget {
               height: 40,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1F),
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+                border: Border.all(color: context.dividerColor),
               ),
               child: Row(
                 children: [
                   Text(
                     'Most Popular',
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13, fontWeight: FontWeight.w500),
+                    style: TextStyle(color: context.onSurface.withValues(alpha: 0.8), fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                   const Spacer(),
-                  Icon(Icons.keyboard_arrow_down, color: Colors.white.withValues(alpha: 0.5), size: 20),
+                  Icon(Icons.keyboard_arrow_down, color: context.iconColor, size: 20),
                 ],
               ),
             ),
@@ -269,17 +309,17 @@ class _SortAndFilters extends StatelessWidget {
             height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 14),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1F),
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              border: Border.all(color: context.dividerColor),
             ),
             child: Row(
               children: [
-                Icon(Icons.tune, color: Colors.white.withValues(alpha: 0.5), size: 16),
+                Icon(Icons.tune, color: context.iconColor, size: 16),
                 const SizedBox(width: 8),
                 Text(
                   'Filters',
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 13, fontWeight: FontWeight.w500),
+                  style: TextStyle(color: context.onSurface.withValues(alpha: 0.8), fontSize: 13, fontWeight: FontWeight.w500),
                 ),
               ],
             ),
@@ -332,128 +372,150 @@ class _AgentCard extends StatelessWidget {
         });
       },
       child: Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F1115),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(12),
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.dividerColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 26),
                 ),
-                child: Icon(icon, color: iconColor, size: 26),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: badgeColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            badge,
-                            style: TextStyle(color: badgeColor, fontSize: 10, fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        fontSize: 12,
-                        height: 1.4,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 14),
-              const SizedBox(width: 4),
-              Text(rating, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
-              const SizedBox(width: 10),
-              Icon(Icons.person_outline, color: Colors.white.withValues(alpha: 0.4), size: 14),
-              const SizedBox(width: 4),
-              Text(users, style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 11)),
-              const SizedBox(width: 10),
-              Container(
-                width: 4,
-                height: 4,
-                decoration: const BoxDecoration(color: Color(0xFF10B981), shape: BoxShape.circle),
-              ),
-              const SizedBox(width: 6),
-              Text(successRate, style: const TextStyle(color: Color(0xFF10B981), fontSize: 11, fontWeight: FontWeight.w600)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            provider,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 11),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: RichText(
-                  text: TextSpan(
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextSpan(
-                        text: price.split('/')[0],
-                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              title,
+                              style: TextStyle(
+                                color: context.onSurface,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: badgeColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              badge,
+                              style: TextStyle(color: badgeColor, fontSize: 10, fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                        ],
                       ),
-                      if (price.contains('/'))
-                        TextSpan(
-                          text: '/${price.split('/')[1]}',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 11),
+                      const SizedBox(height: 6),
+                      Text(
+                        description,
+                        style: TextStyle(
+                          color: context.onSurfaceVariant,
+                          fontSize: 12,
+                          height: 1.4,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ],
                   ),
                 ),
-              ),
-              _ActionButton(label: 'Try Free', isOutline: true, onPressed: () {}),
-              const SizedBox(width: 8),
-              _ActionButton(label: 'Subscribe', isOutline: false, onPressed: () {}),
-            ],
-          ),
-        ],
-      ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                const Icon(Icons.star_rounded, color: Color(0xFFFFB800), size: 14),
+                const SizedBox(width: 4),
+                Text(rating, style: TextStyle(color: context.onSurface, fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(width: 10),
+                Icon(Icons.person_outline, color: context.hintColor, size: 14),
+                const SizedBox(width: 4),
+                Text(users, style: TextStyle(color: context.hintColor, fontSize: 11)),
+                const SizedBox(width: 10),
+                Container(
+                  width: 4,
+                  height: 4,
+                  decoration: const BoxDecoration(color: Color(0xFF10B981), shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 6),
+                Text(successRate, style: const TextStyle(color: Color(0xFF10B981), fontSize: 11, fontWeight: FontWeight.w600)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              provider,
+              style: TextStyle(color: context.hintColor.withValues(alpha: 0.7), fontSize: 11),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: price.split('/')[0],
+                          style: TextStyle(color: context.onSurface, fontSize: 16, fontWeight: FontWeight.w700),
+                        ),
+                        if (price.contains('/'))
+                          TextSpan(
+                            text: '/${price.split('/')[1]}',
+                            style: TextStyle(color: context.onSurfaceVariant, fontSize: 11),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                _ActionButton(label: 'Try Free', isOutline: true, onPressed: () {}),
+                const SizedBox(width: 8),
+                _ActionButton(
+                  label: 'Subscribe', 
+                  isOutline: false, 
+                  onPressed: () {
+                    context.pushNamed(
+                      'subscription-payment',
+                      extra: {
+                        'planName': 'Premium Plan',
+                        'planPrice': price,
+                        'planLimit': 'Unlimited Monthly Access',
+                        'planFeatures': [
+                          'Full AI Agent Access',
+                          'Priority Processing',
+                          'Advanced Analytics',
+                          '24/7 Support',
+                        ],
+                        'agentName': title,
+                        'successButtonText': 'Launch Agent',
+                        'successRoute': '/ai-tools',
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -472,12 +534,16 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Determine colors based on context and style
+    final borderColor = context.dividerColor;
+    final solidBg = const Color(0xFF00D1FF);
+    
     return Container(
       height: 34,
       decoration: BoxDecoration(
-        color: isOutline ? Colors.transparent : const Color(0xFF00D1FF),
+        color: isOutline ? Colors.transparent : solidBg,
         borderRadius: BorderRadius.circular(8),
-        border: isOutline ? Border.all(color: Colors.white.withValues(alpha: 0.12)) : null,
+        border: isOutline ? Border.all(color: borderColor) : null,
       ),
       child: Material(
         color: Colors.transparent,
@@ -490,7 +556,7 @@ class _ActionButton extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  color: isOutline ? Colors.white : Colors.black,
+                  color: isOutline ? context.onSurface : Colors.black,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
@@ -525,9 +591,9 @@ class _WorkflowSection extends StatelessWidget {
                 child: const Icon(Icons.hub_outlined, color: Color(0xFF00D1FF), size: 14),
               ),
               const SizedBox(width: 10),
-              const Text(
+              Text(
                 'Pre-built Workflows',
-                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                style: TextStyle(color: context.onSurface, fontSize: 16, fontWeight: FontWeight.w700),
               ),
             ],
           ),
@@ -584,9 +650,9 @@ class _WorkflowCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F1115),
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: context.dividerColor),
       ),
       child: Row(
         children: [
@@ -606,12 +672,12 @@ class _WorkflowCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: context.onSurface, fontSize: 14, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   description,
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 11),
+                  style: TextStyle(color: context.onSurfaceVariant, fontSize: 11),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -620,7 +686,7 @@ class _WorkflowCard extends StatelessWidget {
                   children: [
                     Text(
                       agents,
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 10),
+                      style: TextStyle(color: context.hintColor, fontSize: 10),
                     ),
                     const SizedBox(width: 6),
                     Container(

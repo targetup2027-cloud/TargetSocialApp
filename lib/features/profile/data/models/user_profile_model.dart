@@ -27,30 +27,47 @@ class UserProfileModel extends UserProfile {
   });
 
   factory UserProfileModel.fromJson(Map<String, dynamic> json) {
+    final firstName = json['firstName'] as String? ?? '';
+    final lastName = json['lastName'] as String? ?? '';
+    final fullName = json['displayName'] as String? ??
+        '$firstName $lastName'.trim();
+    final username = json['username'] as String? ??
+        json['email'] as String? ??
+        fullName.toLowerCase().replaceAll(' ', '_');
+
+    DateTime createdAt;
+    try {
+      createdAt = json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
+          : DateTime.now();
+    } catch (_) {
+      createdAt = DateTime.now();
+    }
+
     return UserProfileModel(
-      id: json['id'] as String,
-      username: json['username'] as String,
-      displayName: json['displayName'] as String,
+      id: json['id'].toString(),
+      username: username,
+      displayName: fullName,
       email: json['email'] as String?,
       phoneNumber: json['phoneNumber'] as String?,
-      avatarUrl: json['avatarUrl'] as String?,
-      coverImageUrl: json['coverImageUrl'] as String?,
+      avatarUrl: json['avatarUrl'] as String? ?? json['profilePictureUrl'] as String?,
+      coverImageUrl: json['coverImageUrl'] as String? ?? json['coverPhotoUrl'] as String?,
       bio: json['bio'] as String?,
       website: json['website'] as String?,
       location: json['location'] as String?,
-      dateOfBirth: json['dateOfBirth'] != null 
-          ? DateTime.parse(json['dateOfBirth'] as String) 
+      dateOfBirth: json['dateOfBirth'] != null
+          ? DateTime.tryParse(json['dateOfBirth'] as String)
           : null,
-      isVerified: json['isVerified'] as bool? ?? false,
+      isVerified: json['isVerified'] as bool? ?? json['isEmailVerified'] as bool? ?? false,
       isPrivate: json['isPrivate'] as bool? ?? false,
       isFollowing: json['isFollowing'] as bool? ?? false,
       isFollowedBy: json['isFollowedBy'] as bool? ?? false,
       followersCount: json['followersCount'] as int? ?? 0,
       followingCount: json['followingCount'] as int? ?? 0,
       postsCount: json['postsCount'] as int? ?? 0,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      lastActiveAt: json['lastActiveAt'] != null 
-          ? DateTime.parse(json['lastActiveAt'] as String) 
+      createdAt: createdAt,
+      lastActiveAt: json['lastActiveAt'] != null
+          ? DateTime.tryParse(json['lastActiveAt'] as String)
           : null,
       interests: (json['interests'] as List<dynamic>?)
           ?.map((e) => e as String).toList() ?? [],
@@ -96,17 +113,27 @@ class FollowUserModel extends FollowUser {
     super.isVerified,
     super.isFollowing,
     super.bio,
+    super.profileCompletionPercentage,
   });
 
   factory FollowUserModel.fromJson(Map<String, dynamic> json) {
+    final firstName = json['firstName'] as String? ?? '';
+    final lastName = json['lastName'] as String? ?? '';
+    final fullName = json['displayName'] as String? ??
+        '$firstName $lastName'.trim();
+    final username = json['username'] as String? ??
+        json['email'] as String? ??
+        fullName.toLowerCase().replaceAll(' ', '_');
+
     return FollowUserModel(
-      id: json['id'] as String,
-      username: json['username'] as String,
-      displayName: json['displayName'] as String,
-      avatarUrl: json['avatarUrl'] as String?,
-      isVerified: json['isVerified'] as bool? ?? false,
+      id: json['id'].toString(),
+      username: username,
+      displayName: fullName,
+      avatarUrl: json['avatarUrl'] as String? ?? json['profilePictureUrl'] as String?,
+      isVerified: json['isVerified'] as bool? ?? json['isEmailVerified'] as bool? ?? false,
       isFollowing: json['isFollowing'] as bool? ?? false,
       bio: json['bio'] as String?,
+      profileCompletionPercentage: json['profileCompletionPercentage'] as int? ?? 0,
     );
   }
 
@@ -119,6 +146,7 @@ class FollowUserModel extends FollowUser {
       'isVerified': isVerified,
       'isFollowing': isFollowing,
       'bio': bio,
+      'profileCompletionPercentage': profileCompletionPercentage,
     };
   }
 }

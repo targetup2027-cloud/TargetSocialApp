@@ -7,12 +7,19 @@ abstract class ProfileRepository {
   
   Future<UserProfile> updateProfile({
     String? displayName,
-    String? bio,
-    String? website,
-    String? location,
-    DateTime? dateOfBirth,
+    String? username,
+    Nullable<String>? bio,
+    Nullable<String>? website,
+    Nullable<String>? location,
+    Nullable<String>? phoneNumber,
+    Nullable<String>? email,
+    Nullable<String>? nationalId,
+    Nullable<String>? nationalIdImageUrl,
+    Nullable<IdDocumentType>? idDocumentType,
+    Nullable<DateTime>? dateOfBirth,
     List<String>? interests,
-    Map<String, String>? socialLinks,
+    Nullable<Map<String, String>>? socialLinks,
+    bool? isVerified,
   });
   
   Future<String> updateAvatar(String imagePath);

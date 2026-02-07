@@ -1,0 +1,3017 @@
+diff --git a/lib/features/profile/application/profile_controller.dart b/lib/features/profile/application/profile_controller.dart
+index a569349..8111682 100644
+--- a/lib/features/profile/application/profile_controller.dart
++++ b/lib/features/profile/application/profile_controller.dart
+@@ -1,15 +1,26 @@
++import 'dart:math';
++
+ import 'package:flutter_riverpod/flutter_riverpod.dart';
+ import 'package:http/http.dart' as http;
++
++
++
+ import '../domain/entities/user_profile.dart';
+ import '../domain/repositories/profile_repository.dart';
+-import '../data/repositories/profile_repository_impl.dart';
+-import '../data/datasources/profile_remote_data_source.dart';
++
++import '../data/local/local_profile_repository.dart';
++import '../../../core/validation/validators.dart';
++
++const int kFollowPageSize = 20;
++
++final httpClientProvider = Provider<http.Client>((ref) {
++  final client = http.Client();
++  ref.onDispose(client.close);
++  return client;
++});
+ 
+ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
+-  return ProfileRepositoryImpl(
+-    remoteDataSource: ProfileRemoteDataSourceImpl(client: http.Client()),
+-    useMockData: true,
+-  );
++  return LocalProfileRepository();
+ });
+ 
+ final currentUserProfileProvider = FutureProvider<UserProfile>((ref) async {
+@@ -17,22 +28,26 @@ final currentUserProfileProvider = FutureProvider<UserProfile>((ref) async {
+   return repository.getCurrentUserProfile();
+ });
+ 
+-final userProfileProvider = FutureProvider.family<UserProfile, String>((ref, userId) async {
++final userProfileProvider =
++    FutureProvider.family<UserProfile, String>((ref, userId) async {
+   final repository = ref.watch(profileRepositoryProvider);
+   return repository.getUserProfile(userId);
+ });
+ 
+-final followersProvider = FutureProvider.family<List<FollowUser>, String>((ref, userId) async {
++final followersProvider =
++    FutureProvider.family<List<FollowUser>, String>((ref, userId) async {
+   final repository = ref.watch(profileRepositoryProvider);
+   return repository.getFollowers(userId);
+ });
+ 
+-final followingProvider = FutureProvider.family<List<FollowUser>, String>((ref, userId) async {
++final followingProvider =
++    FutureProvider.family<List<FollowUser>, String>((ref, userId) async {
+   final repository = ref.watch(profileRepositoryProvider);
+   return repository.getFollowing(userId);
+ });
+ 
+-final searchUsersProvider = FutureProvider.family<List<FollowUser>, String>((ref, query) async {
++final searchUsersProvider =
++    FutureProvider.family<List<FollowUser>, String>((ref, query) async {
+   final repository = ref.watch(profileRepositoryProvider);
+   return repository.searchUsers(query);
+ });
+@@ -44,66 +59,187 @@ final suggestedUsersProvider = FutureProvider<List<FollowUser>>((ref) async {
+ 
+ class ProfileController extends StateNotifier<AsyncValue<UserProfile>> {
+   final ProfileRepository _repository;
++  UserProfile? _cachedProfile;
++  bool _isUpdating = false;
+ 
+   ProfileController(this._repository) : super(const AsyncValue.loading()) {
+     loadCurrentUser();
+   }
+ 
+-  Future<void> loadCurrentUser() async {
++  UserProfile _createFallbackProfile() {
++    return UserProfile(
++      id: 'current_user',
++      username: 'user',
++      displayName: 'New User',
++      email: null,
++      createdAt: DateTime.now(),
++    );
++  }
++
++  Future<void> loadCurrentUser({bool forceRefresh = false}) async {
++    if (!forceRefresh && _cachedProfile != null) {
++      state = AsyncValue.data(_cachedProfile!);
++      return;
++    }
++
+     state = const AsyncValue.loading();
+     try {
+       final profile = await _repository.getCurrentUserProfile();
++      _cachedProfile = profile;
+       state = AsyncValue.data(profile);
+-    } catch (e, st) {
+-      state = AsyncValue.error(e, st);
++    } catch (e) {
++      if (_cachedProfile != null) {
++        state = AsyncValue.data(_cachedProfile!);
++      } else {
++        _cachedProfile = _createFallbackProfile();
++        state = AsyncValue.data(_cachedProfile!);
++      }
+     }
+   }
+ 
+   Future<void> updateProfile({
+     String? displayName,
++    String? username,
+     String? bio,
+     String? website,
+     String? location,
++    String? phoneNumber,
++    String? email,
++    String? nationalId,
++    String? nationalIdImageUrl,
++    IdDocumentType? idDocumentType,
++    DateTime? dateOfBirth,
++    List<String>? interests,
++    Map<String, String>? socialLinks,
+   }) async {
++    if (_isUpdating) return;
++    _isUpdating = true;
++
+     try {
++      final validations = <ValidationResult>[];
++
++      if (displayName != null) {
++        validations.add(Validators.combine([
++          Validators.minLength(displayName, 2, fieldName: 'Display Name'),
++          Validators.maxLength(displayName, 50, fieldName: 'Display Name'),
++        ]));
++      }
++
++      if (username != null) {
++        validations.add(Validators.combine([
++          Validators.minLength(username, 3, fieldName: 'Username'),
++          Validators.maxLength(username, 30, fieldName: 'Username'),
++        ]));
++      }
++
++      if (bio != null) {
++        validations.add(Validators.maxLength(bio, 160, fieldName: 'Bio'));
++      }
++
++      if (website != null && website.isNotEmpty) {
++        validations.add(Validators.url(website, fieldName: 'Website'));
++      }
++
++      if (email != null && email.isNotEmpty) {
++        validations.add(Validators.email(email));
++      }
++
++
++
++      final invalidResult = validations.cast<ValidationResult?>().firstWhere(
++        (v) => !v!.isValid,
++        orElse: () => null,
++      );
++      if (invalidResult != null) {
++        throw Exception(invalidResult.errorMessage);
++      }
++
++
++      state = const AsyncValue.loading();
++
+       final updatedProfile = await _repository.updateProfile(
+-        displayName: displayName,
+-        bio: bio,
+-        website: website,
+-        location: location,
++        displayName: displayName?.trim(),
++        username: username?.trim(),
++        bio: bio?.trim(),
++        website: website?.trim(),
++        location: location?.trim(),
++        phoneNumber: phoneNumber?.trim(),
++        email: email?.trim(),
++        nationalId: nationalId?.trim(),
++        nationalIdImageUrl: nationalIdImageUrl,
++        idDocumentType: idDocumentType,
++        dateOfBirth: dateOfBirth,
++        interests: interests,
++        socialLinks: socialLinks,
+       );
++
++      _cachedProfile = updatedProfile;
+       state = AsyncValue.data(updatedProfile);
+-    } catch (e, st) {
+-      state = AsyncValue.error(e, st);
++    } catch (e) {
++      final fallback = _cachedProfile ?? state.valueOrNull;
++      if (fallback != null) {
++        state = AsyncValue.data(fallback);
++      } else {
++        // If we don't have a fallback, then we can error the state
++        state = AsyncValue.error(e, StackTrace.current);
++      }
++      // Re-throw to let UI handle the error (SnackBar)
++      // Re-throw to let UI handle the error (SnackBar)
++      rethrow;
++    } finally {
++      _isUpdating = false;
+     }
+   }
+ 
+   Future<void> updateAvatar(String imagePath) async {
+     try {
+       final newAvatarUrl = await _repository.updateAvatar(imagePath);
+-      final currentProfile = state.valueOrNull;
++      final currentProfile = state.valueOrNull ?? _cachedProfile;
+       if (currentProfile != null) {
+-        state = AsyncValue.data(currentProfile.copyWith(avatarUrl: newAvatarUrl));
++        final updated = currentProfile.copyWith(avatarUrl: newAvatarUrl);
++        _cachedProfile = updated;
++        state = AsyncValue.data(updated);
+       }
+     } catch (e) {
+-      
++      rethrow;
+     }
+   }
+ 
+   Future<void> updateCoverImage(String imagePath) async {
+     try {
+       final newCoverUrl = await _repository.updateCoverImage(imagePath);
+-      final currentProfile = state.valueOrNull;
++      final currentProfile = state.valueOrNull ?? _cachedProfile;
+       if (currentProfile != null) {
+-        state = AsyncValue.data(currentProfile.copyWith(coverImageUrl: newCoverUrl));
++        final updated = currentProfile.copyWith(coverImageUrl: newCoverUrl);
++        _cachedProfile = updated;
++        state = AsyncValue.data(updated);
+       }
+     } catch (e) {
+-      
++      rethrow;
++    }
++  }
++
++
++
++  Future<void> updateNationalIdImage(String imagePath) async {
++    try {
++      await updateProfile(nationalIdImageUrl: imagePath);
++    } catch (e) {
++      rethrow;
++    }
++  }
++
++  Future<void> updateIdDocumentType(IdDocumentType type) async {
++    try {
++      await updateProfile(idDocumentType: type);
++    } catch (e) {
++      rethrow;
+     }
+   }
+ }
+ 
+-final profileControllerProvider = StateNotifierProvider<ProfileController, AsyncValue<UserProfile>>((ref) {
++final profileControllerProvider =
++    StateNotifierProvider<ProfileController, AsyncValue<UserProfile>>((ref) {
+   final repository = ref.watch(profileRepositoryProvider);
+   return ProfileController(repository);
+ });
+@@ -111,8 +247,10 @@ final profileControllerProvider = StateNotifierProvider<ProfileController, Async
+ class UserProfileController extends StateNotifier<AsyncValue<UserProfile>> {
+   final ProfileRepository _repository;
+   final String userId;
++  bool _isToggling = false;
+ 
+-  UserProfileController(this._repository, this.userId) : super(const AsyncValue.loading()) {
++  UserProfileController(this._repository, this.userId)
++      : super(const AsyncValue.loading()) {
+     loadUserProfile();
+   }
+ 
+@@ -127,21 +265,38 @@ class UserProfileController extends StateNotifier<AsyncValue<UserProfile>> {
+   }
+ 
+   Future<void> toggleFollow() async {
++    if (_isToggling) return;
++
+     final currentProfile = state.valueOrNull;
+     if (currentProfile == null) return;
+ 
++    _isToggling = true;
++
++    final wasFollowing = currentProfile.isFollowing;
++
++    final optimisticProfile = currentProfile.copyWith(
++      isFollowing: !wasFollowing,
++      followersCount: wasFollowing
++          ? max(0, currentProfile.followersCount - 1)
++          : currentProfile.followersCount + 1,
++    );
++    state = AsyncValue.data(optimisticProfile);
++
+     try {
+-      final updatedProfile = currentProfile.isFollowing
++      final serverProfile = wasFollowing
+           ? await _repository.unfollowUser(userId)
+           : await _repository.followUser(userId);
+-      state = AsyncValue.data(updatedProfile);
+-    } catch (e) {
+-      
++      state = AsyncValue.data(serverProfile);
++    } catch (_) {
++      state = AsyncValue.data(currentProfile);
++    } finally {
++      _isToggling = false;
+     }
+   }
+ }
+ 
+-final userProfileControllerProvider = StateNotifierProvider.family<UserProfileController, AsyncValue<UserProfile>, String>((ref, userId) {
++final userProfileControllerProvider = StateNotifierProvider.family<
++    UserProfileController, AsyncValue<UserProfile>, String>((ref, userId) {
+   final repository = ref.watch(profileRepositoryProvider);
+   return UserProfileController(repository, userId);
+ });
+@@ -150,21 +305,25 @@ class FollowListController extends StateNotifier<AsyncValue<List<FollowUser>>> {
+   final ProfileRepository _repository;
+   final String userId;
+   final bool isFollowers;
++
+   int _currentPage = 1;
+   bool _hasMore = true;
++  bool _isLoadingMore = false;
+ 
+-  FollowListController(this._repository, this.userId, this.isFollowers) : super(const AsyncValue.loading()) {
++  FollowListController(this._repository, this.userId, this.isFollowers)
++      : super(const AsyncValue.loading()) {
+     loadList();
+   }
+ 
+   Future<void> loadList() async {
+     state = const AsyncValue.loading();
+     try {
+-      final users = isFollowers 
++      final users = isFollowers
+           ? await _repository.getFollowers(userId, page: 1)
+           : await _repository.getFollowing(userId, page: 1);
++
+       _currentPage = 1;
+-      _hasMore = users.length >= 20;
++      _hasMore = users.length >= kFollowPageSize;
+       state = AsyncValue.data(users);
+     } catch (e, st) {
+       state = AsyncValue.error(e, st);
+@@ -172,18 +331,26 @@ class FollowListController extends StateNotifier<AsyncValue<List<FollowUser>>> {
+   }
+ 
+   Future<void> loadMore() async {
+-    if (!_hasMore) return;
++    if (!_hasMore || _isLoadingMore) return;
+ 
+     final currentUsers = state.valueOrNull ?? [];
++    _isLoadingMore = true;
++
+     try {
+-      final newUsers = isFollowers 
+-          ? await _repository.getFollowers(userId, page: _currentPage + 1)
+-          : await _repository.getFollowing(userId, page: _currentPage + 1);
+-      _currentPage++;
+-      _hasMore = newUsers.length >= 20;
++      final nextPage = _currentPage + 1;
++      final newUsers = isFollowers
++          ? await _repository.getFollowers(userId, page: nextPage)
++          : await _repository.getFollowing(userId, page: nextPage);
++
++      _currentPage = nextPage;
++      _hasMore = newUsers.length >= kFollowPageSize;
++
+       state = AsyncValue.data([...currentUsers, ...newUsers]);
+-    } catch (e) {
+-      
++    } catch (e, st) {
++      state = AsyncValue.error(e, st);
++      state = AsyncValue.data(currentUsers);
++    } finally {
++      _isLoadingMore = false;
+     }
+   }
+ 
+@@ -193,28 +360,37 @@ class FollowListController extends StateNotifier<AsyncValue<List<FollowUser>>> {
+     if (index < 0) return;
+ 
+     final user = currentUsers[index];
++    final wasFollowing = user.isFollowing;
++
++    final optimisticUsers = [...currentUsers];
++    optimisticUsers[index] = user.copyWith(isFollowing: !wasFollowing);
++    state = AsyncValue.data(optimisticUsers);
++
+     try {
+-      if (user.isFollowing) {
++      if (wasFollowing) {
+         await _repository.unfollowUser(targetUserId);
+       } else {
+         await _repository.followUser(targetUserId);
+       }
+-
+-      final updatedUsers = [...currentUsers];
+-      updatedUsers[index] = user.copyWith(isFollowing: !user.isFollowing);
+-      state = AsyncValue.data(updatedUsers);
+-    } catch (e) {
+-      
++    } catch (_) {
++      final revertUsers = [...(state.valueOrNull ?? optimisticUsers)];
++      final revertIndex = revertUsers.indexWhere((u) => u.id == targetUserId);
++      if (revertIndex >= 0) {
++        revertUsers[revertIndex] = user;
++      }
++      state = AsyncValue.data(revertUsers);
+     }
+   }
+ }
+ 
+-final followersControllerProvider = StateNotifierProvider.family<FollowListController, AsyncValue<List<FollowUser>>, String>((ref, userId) {
++final followersControllerProvider = StateNotifierProvider.family<
++    FollowListController, AsyncValue<List<FollowUser>>, String>((ref, userId) {
+   final repository = ref.watch(profileRepositoryProvider);
+   return FollowListController(repository, userId, true);
+ });
+ 
+-final followingControllerProvider = StateNotifierProvider.family<FollowListController, AsyncValue<List<FollowUser>>, String>((ref, userId) {
++final followingControllerProvider = StateNotifierProvider.family<
++    FollowListController, AsyncValue<List<FollowUser>>, String>((ref, userId) {
+   final repository = ref.watch(profileRepositoryProvider);
+   return FollowListController(repository, userId, false);
+ });
+diff --git a/lib/features/profile/data/local/local_profile_repository.dart b/lib/features/profile/data/local/local_profile_repository.dart
+new file mode 100644
+index 0000000..fd43c89
+--- /dev/null
++++ b/lib/features/profile/data/local/local_profile_repository.dart
+@@ -0,0 +1,189 @@
++import 'dart:async';
++import 'dart:math';
++
++import '../../domain/entities/user_profile.dart';
++import '../../domain/repositories/profile_repository.dart';
++import '../../../../core/data/mock_data.dart';
++
++class LocalProfileRepository implements ProfileRepository {
++  UserProfile _currentUser;
++  final List<FollowUser> _followers;
++  final List<FollowUser> _following;
++  final List<FollowUser> _suggested;
++
++  LocalProfileRepository()
++      : _currentUser = MockData.currentUser,
++        _followers = List.from(MockData.followers),
++        _following = List.from(MockData.following),
++        _suggested = List.from(MockData.suggestedUsers);
++
++  // Fake network delay
++  Future<void> _delay() async {
++    await Future.delayed(Duration(milliseconds: 300 + Random().nextInt(500)));
++  }
++
++  @override
++  Future<UserProfile> getCurrentUserProfile() async {
++    await _delay();
++    return _currentUser;
++  }
++
++  @override
++  Future<UserProfile> getUserProfile(String userId) async {
++    await _delay();
++    if (userId == 'currentUser' || userId == _currentUser.id) {
++      return _currentUser;
++    }
++    // Try to find in lists, or generate a mock one
++    final found = _followers.firstWhere((e) => e.id == userId,
++        orElse: () => _following.firstWhere((e) => e.id == userId,
++            orElse: () => _suggested.firstWhere((e) => e.id == userId,
++                orElse: () => MockData.followers.first)));
++
++    return UserProfile(
++      id: found.id,
++      username: found.username,
++      displayName: found.displayName,
++      avatarUrl: found.avatarUrl,
++      isVerified: found.isVerified,
++      bio: found.bio,
++      isFollowing: found.isFollowing,
++      followersCount: 10 + Random().nextInt(1000),
++      followingCount: 5 + Random().nextInt(500),
++      postsCount: Random().nextInt(50),
++      createdAt: DateTime.now().subtract(const Duration(days: 100)),
++    );
++  }
++
++  @override
++  Future<UserProfile> updateProfile({
++    String? displayName,
++    String? username,
++    String? bio,
++    String? website,
++    String? location,
++    String? phoneNumber,
++    String? email,
++    String? nationalId,
++    String? nationalIdImageUrl,
++    IdDocumentType? idDocumentType,
++    DateTime? dateOfBirth,
++    List<String>? interests,
++    Map<String, String>? socialLinks,
++  }) async {
++    await _delay();
++    _currentUser = _currentUser.copyWith(
++      displayName: displayName ?? _currentUser.displayName,
++      username: username ?? _currentUser.username,
++      bio: bio,
++      website: website,
++      location: location,
++      phoneNumber: phoneNumber,
++      email: email,
++      nationalId: nationalId,
++      nationalIdImageUrl: nationalIdImageUrl,
++      idDocumentType: idDocumentType,
++      dateOfBirth: dateOfBirth,
++      interests: interests,
++      socialLinks: socialLinks,
++    );
++    return _currentUser;
++  }
++
++  @override
++  Future<String> updateAvatar(String imagePath) async {
++    await _delay();
++    // In local mode, we return the path itself to be displayed via FileImage (or handled by UI)
++    // However, the Model expects a URL string. 
++    // We will store the path. The UI needs to handle "if !http then File".
++    _currentUser = _currentUser.copyWith(avatarUrl: imagePath);
++    return imagePath;
++  }
++
++  @override
++  Future<String> updateCoverImage(String imagePath) async {
++    await _delay();
++    _currentUser = _currentUser.copyWith(coverImageUrl: imagePath);
++    return imagePath;
++  }
++
++  @override
++  Future<UserProfile> followUser(String userId) async {
++    await _delay();
++    // In a real app we'd fetch the user, update relationship, etc.
++    // Here we just return a simplified updated view of that user
++    final user = await getUserProfile(userId);
++    return user.copyWith(isFollowing: true, followersCount: user.followersCount + 1);
++  }
++
++  @override
++  Future<UserProfile> unfollowUser(String userId) async {
++    await _delay();
++    final user = await getUserProfile(userId);
++    return user.copyWith(isFollowing: false, followersCount: max(0, user.followersCount - 1));
++  }
++
++  @override
++  Future<List<FollowUser>> getFollowers(String userId, {int page = 1, int limit = 20}) async {
++    await _delay();
++    return _followers;
++  }
++
++  @override
++  Future<List<FollowUser>> getFollowing(String userId, {int page = 1, int limit = 20}) async {
++    await _delay();
++    return _following;
++  }
++
++  @override
++  Future<List<FollowUser>> searchUsers(String query, {int page = 1, int limit = 20}) async {
++    await _delay();
++    final q = query.toLowerCase();
++    final all = [..._followers, ..._following, ..._suggested];
++    return all.where((u) => 
++      u.displayName.toLowerCase().contains(q) || 
++      u.username.toLowerCase().contains(q)
++    ).toList();
++  }
++
++  @override
++  Future<List<FollowUser>> getSuggestedUsers({int limit = 10}) async {
++    await _delay();
++    return _suggested;
++  }
++
++  @override
++  Future<void> blockUser(String userId) async {
++    await _delay();
++  }
++
++  @override
++  Future<void> unblockUser(String userId) async {
++    await _delay();
++  }
++
++  @override
++  Future<List<FollowUser>> getBlockedUsers() async {
++    await _delay();
++    return [];
++  }
++
++  @override
++  Future<void> reportUser(String userId, String reason) async {
++    await _delay();
++  }
++
++  @override
++  Future<void> updatePrivacySettings({bool? isPrivate}) async {
++    await _delay();
++    if (isPrivate != null) {
++      _currentUser = _currentUser.copyWith(isPrivate: isPrivate);
++    }
++  }
++
++  @override
++  Future<void> updateNotificationSettings(Map<String, bool> settings) async {
++    await _delay();
++    // No field in UserProfile for this, ignoring
++  }
++}
+diff --git a/lib/features/profile/presentation/profile_screen.dart b/lib/features/profile/presentation/profile_screen.dart
+index 8cf3dbb..58f559e 100644
+--- a/lib/features/profile/presentation/profile_screen.dart
++++ b/lib/features/profile/presentation/profile_screen.dart
+@@ -1,68 +1,157 @@
+ import 'package:flutter/material.dart';
++import 'package:flutter_riverpod/flutter_riverpod.dart';
++import 'dart:io';
++import 'package:go_router/go_router.dart';
++import '../../../app/theme/theme_extensions.dart';
+ import '../../../core/widgets/uaxis_drawer.dart';
+ import '../../../core/widgets/universe_back_button.dart';
+ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
++import '../domain/entities/user_profile.dart';
++import '../application/profile_controller.dart';
++import '../../social/application/posts_controller.dart';
++import '../../social/models/post_data.dart';
++import '../../social/widgets/post_card.dart';
++import '../../social/presentation/comments_sheet.dart';
++import '../../social/domain/entities/post.dart';
++import '../../social/application/current_user_provider.dart';
++import 'package:image_picker/image_picker.dart';
+ 
+-class ProfileScreen extends StatefulWidget {
++class ProfileScreen extends ConsumerStatefulWidget {
+   const ProfileScreen({super.key});
+ 
+   @override
+-  State<ProfileScreen> createState() => _ProfileScreenState();
++  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+ }
+ 
+-class _ProfileScreenState extends State<ProfileScreen> {
++class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+   int _selectedTab = 0;
+   final List<String> _tabs = ['Posts', 'Media', 'About', 'Connections'];
+ 
+-  bool _instagramConnected = true;
+-  bool _youtubeConnected = false;
+-  bool _facebookConnected = false;
+-  bool _linkedinConnected = true;
+-
+   String _phonePrivacy = 'Private';
+   String _emailPrivacy = 'Friends Only';
+   String _locationPrivacy = 'Public';
+   String _websitePrivacy = 'Public';
+   String _businessLinksPrivacy = 'Public';
+ 
++  void _showAvatarPicker() {
++    showModalBottomSheet(
++      context: context,
++      backgroundColor: context.cardColor,
++      shape: const RoundedRectangleBorder(
++        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
++      ),
++      builder: (ctx) => SafeArea(
++        child: Column(
++          mainAxisSize: MainAxisSize.min,
++          children: [
++            Container(
++              margin: const EdgeInsets.only(top: 12, bottom: 8),
++              width: 40,
++              height: 4,
++              decoration: BoxDecoration(
++                color: context.hintColor.withValues(alpha: 0.3),
++                borderRadius: BorderRadius.circular(2),
++              ),
++            ),
++            Padding(
++              padding: const EdgeInsets.all(16),
++              child: Text(
++                'Change Profile Photo',
++                style: TextStyle(
++                  color: context.onSurface,
++                  fontSize: 18,
++                  fontWeight: FontWeight.w600,
++                ),
++              ),
++            ),
++            ListTile(
++              leading: Container(
++                width: 40,
++                height: 40,
++                decoration: BoxDecoration(
++                  color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
++                  borderRadius: BorderRadius.circular(10),
++                ),
++                child: const Icon(Icons.camera_alt, color: Color(0xFF8B5CF6)),
++              ),
++              title: Text('Take Photo', style: TextStyle(color: context.onSurface)),
++              onTap: () {
++                Navigator.pop(ctx);
++                _pickAndUpdateAvatar(ImageSource.camera);
++              },
++            ),
++            ListTile(
++              leading: Container(
++                width: 40,
++                height: 40,
++                decoration: BoxDecoration(
++                  color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
++                  borderRadius: BorderRadius.circular(10),
++                ),
++                child: const Icon(Icons.photo_library, color: Color(0xFF3B82F6)),
++              ),
++              title: Text('Choose from Gallery', style: TextStyle(color: context.onSurface)),
++              onTap: () {
++                Navigator.pop(ctx);
++                _pickAndUpdateAvatar(ImageSource.gallery);
++              },
++            ),
++            const SizedBox(height: 16),
++          ],
++        ),
++      ),
++    );
++  }
++
++  Future<void> _pickAndUpdateAvatar(ImageSource source) async {
++    try {
++      final ImagePicker picker = ImagePicker();
++      final XFile? image = await picker.pickImage(
++        source: source,
++        maxWidth: 1024,
++        maxHeight: 1024,
++        imageQuality: 85,
++      );
++      
++      if (image != null) {
++        // Show loading via controller state if possible, or local state
++        await ref.read(profileControllerProvider.notifier).updateAvatar(image.path);
++        
++        if (mounted) {
++          ScaffoldMessenger.of(context).showSnackBar(
++            const SnackBar(
++              content: Text('Profile picture updated!'),
++              backgroundColor: Color(0xFF10B981),
++            ),
++          );
++        }
++      }
++    } catch (e) {
++      if (mounted) {
++        ScaffoldMessenger.of(context).showSnackBar(
++          SnackBar(
++            content: Text('Failed to update avatar: $e'),
++            backgroundColor: Colors.red,
++          ),
++        );
++      }
++    }
++  }
++
+   @override
+   Widget build(BuildContext context) {
++    final profileAsync = ref.watch(profileControllerProvider);
++
++
+     return Scaffold(
+-        backgroundColor: Colors.black,
+-        drawer: UAxisDrawer(),
++        backgroundColor: context.scaffoldBg,
++        drawer: const UAxisDrawer(),
+         body: Stack(
+           children: [
+-            CustomScrollView(
+-              slivers: [
+-                SliverToBoxAdapter(
+-                  child: Column(
+-                    crossAxisAlignment: CrossAxisAlignment.start,
+-                    children: [
+-                      _buildCoverAndAvatar(),
+-                      _buildProfileInfo(),
+-                      _buildTrustScore(),
+-                      _buildStats(),
+-                      _buildCreatePostButton(),
+-                      _buildConnections(),
+-                      const SizedBox(height: 24),
+-                      _buildConnectedPlatforms(),
+-                      const SizedBox(height: 24),
+-                      _buildPrivacyControls(),
+-                      const SizedBox(height: 24),
+-                      _buildTabBar(),
+-                    ],
+-                  ),
+-                ),
+-                SliverPadding(
+-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
+-                  sliver: SliverList(
+-                    delegate: SliverChildBuilderDelegate(
+-                      (context, index) => _buildPostCard(),
+-                      childCount: 1,
+-                    ),
+-                  ),
+-                ),
+-              ],
++            profileAsync.when(
++              data: (profile) => _buildProfileContent(context, profile),
++              loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF3B82F6))),
++              error: (err, stack) => Center(child: Text('Error loading profile: $err', style: TextStyle(color: context.onSurface))),
+             ),
+             Builder(
+               builder: (context) => SideMenuToggle(
+@@ -75,27 +164,147 @@ class _ProfileScreenState extends State<ProfileScreen> {
+       );
+   }
+ 
+-  Widget _buildCoverAndAvatar() {
++
++
++  ImageProvider _getImageProvider(String url) {
++    if (url.startsWith('http')) {
++      return NetworkImage(url);
++    }
++    return FileImage(File(url));
++  }
++
++  Widget _buildProfileContent(BuildContext context, UserProfile profile) {
++    return CustomScrollView(
++      slivers: [
++        SliverToBoxAdapter(
++          child: Column(
++            crossAxisAlignment: CrossAxisAlignment.start,
++            children: [
++              _buildCoverAndAvatar(profile),
++              _buildProfileInfo(profile),
++              _buildTrustScore(profile),
++              _buildStats(profile),
++              _buildCreatePostButton(),
++              _buildConnections(),
++              const SizedBox(height: 24),
++              _buildConnectedPlatforms(profile),
++              const SizedBox(height: 24),
++              _buildPrivacyControls(),
++              const SizedBox(height: 24),
++              _buildTabBar(),
++            ],
++          ),
++        ),
++        if (_selectedTab == 0) // Posts Tab
++           _buildPostsList(profile.id),
++      ],
++    );
++  }
++
++  PostData _mapPostToData(Post post) {
++    final reactions = <PostReaction>[
++      if (post.likesCount > 0)
++        PostReaction(type: ReactionType.like, count: post.likesCount),
++    ];
++
++    PostType type = PostType.text;
++    if (post.mediaType == 'video') {
++      type = PostType.video;
++    } else if (post.mediaUrls.isNotEmpty) {
++      type = PostType.image;
++    }
++
++    return PostData(
++      id: post.id,
++      userName: post.authorName,
++      userAvatar: post.authorAvatarUrl ?? '',
++      handle: post.authorUsername,
++      timeAgo: _getTimeAgo(post.createdAt),
++      isVerified: post.authorIsVerified,
++      content: post.content ?? '',
++      type: type,
++      mediaUrl: post.mediaUrls.isNotEmpty ? post.mediaUrls.first : null,
++      reactions: reactions,
++      commentCount: post.commentsCount,
++      shareCount: post.sharesCount,
++      topComments: [],
++      userReaction: post.userReaction,
++    );
++  }
++  
++  String _getTimeAgo(DateTime dateTime) {
++    final difference = DateTime.now().difference(dateTime);
++    if (difference.inDays > 7) {
++      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
++    } else if (difference.inDays >= 1) {
++      return '${difference.inDays}d ago';
++    } else if (difference.inHours >= 1) {
++      return '${difference.inHours}h ago';
++    } else if (difference.inMinutes >= 1) {
++      return '${difference.inMinutes}m ago';
++    } else {
++      return 'Just now';
++    }
++  }
++
++  Widget _buildPostsList(String userId) {
++     final userPostsAsync = ref.watch(userPostsProvider(userId));
++
++     return userPostsAsync.when(
++       data: (posts) {
++         if (posts.isEmpty) {
++           return SliverToBoxAdapter(
++             child: Padding(
++               padding: const EdgeInsets.all(40.0),
++               child: Center(
++                 child: Text('No posts yet', style: TextStyle(color: context.hintColor)),
++               ),
++             ),
++           );
++         }
++         return SliverPadding(
++           padding: const EdgeInsets.fromLTRB(20, 16, 20, 100),
++           sliver: SliverList(
++              delegate: SliverChildBuilderDelegate(
++                (context, index) {
++                  final post = posts[index];
++                  return PostCard(
++                    post: _mapPostToData(post),
++                    onReact: (type) => ref.read(postsControllerProvider.notifier).reactToPost(post.id, type),
++                    onComment: () => CommentsSheet.show(context, post.id),
++                    onMoreOptions: () => _showPostOptions(context, post),
++                  );
++                },
++                childCount: posts.length,
++              ),
++           ),
++         );
++       },
++       loading: () => const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator())),
++       error: (e, s) => SliverToBoxAdapter(child: Center(child: Text('Error: $e', style: TextStyle(color: context.onSurface)))),
++     );
++  }
++
++  Widget _buildCoverAndAvatar(UserProfile profile) {
+     return Stack(
+       clipBehavior: Clip.none,
+       children: [
+         Container(
+           height: 160,
+           width: double.infinity,
+-          decoration: const BoxDecoration(
+-            image: DecorationImage(
+-              image: NetworkImage(
+-                'https://images.unsplash.com/photo-1573164713988-8665fc963095?w=800&h=400&fit=crop',
+-              ),
++          decoration: BoxDecoration(
++            color: context.cardColor,
++            image: profile.coverImageUrl != null ? DecorationImage(
++              image: _getImageProvider(profile.coverImageUrl!),
+               fit: BoxFit.cover,
+-            ),
++            ) : null,
+           ),
+         ),
+         Positioned(
+           top: 50,
+           right: 16,
+           child: GestureDetector(
+-            onTap: () {},
++            onTap: () => context.push('/edit-profile'),
+             child: Container(
+               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+               decoration: BoxDecoration(
+@@ -133,57 +342,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
+                 height: 100,
+                 decoration: BoxDecoration(
+                   shape: BoxShape.circle,
+-                  border: Border.all(color: const Color(0xFF0A0A0A), width: 4),
+-                  image: const DecorationImage(
+-                    image: NetworkImage(
+-                      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=faces',
+-                    ),
++                  border: Border.all(color: context.scaffoldBg, width: 4),
++                  color: context.cardColor,
++                  image: profile.avatarUrl != null ? DecorationImage(
++                    image: _getImageProvider(profile.avatarUrl!),
+                     fit: BoxFit.cover,
+-                  ),
++                  ) : null,
+                   boxShadow: [
+                     BoxShadow(
+-                      color: Colors.black.withValues(alpha: 0.5),
++                      color: Colors.black.withValues(alpha: 0.2),
+                       blurRadius: 10,
+                       offset: const Offset(0, 4),
+                     ),
+                   ],
+                 ),
+-              ),
+-              Positioned(
+-                top: 0,
+-                right: 0,
+-                child: Container(
+-                  width: 24,
+-                  height: 24,
+-                  decoration: BoxDecoration(
+-                    shape: BoxShape.circle,
+-                    color: const Color(0xFF3B82F6),
+-                    border: Border.all(color: const Color(0xFF0A0A0A), width: 2),
+-                  ),
+-                  child: const Icon(Icons.check, size: 14, color: Colors.white),
+-                ),
++                child: profile.avatarUrl == null ? Icon(Icons.person, color: context.iconColor, size: 40) : null,
+               ),
+               Positioned(
+                 bottom: 0,
+                 right: 0,
+                 child: GestureDetector(
+-                  onTap: () {},
++                  behavior: HitTestBehavior.opaque,
++                  onTap: () => _showAvatarPicker(),
+                   child: Container(
+-                    width: 32,
+-                    height: 32,
++                    width: 28,
++                    height: 28,
+                     decoration: BoxDecoration(
+                       shape: BoxShape.circle,
+-                      color: const Color(0xFF1F2937),
+-                      border: Border.all(color: const Color(0xFF0A0A0A), width: 2),
++                      gradient: const LinearGradient(
++                        begin: Alignment.topLeft,
++                        end: Alignment.bottomRight,
++                        colors: [Color(0xFF8B5CF6), Color(0xFFEC4899)],
++                      ),
++                      border: Border.all(color: context.scaffoldBg, width: 2),
+                       boxShadow: [
+                         BoxShadow(
+-                          color: Colors.black.withValues(alpha: 0.3),
+-                          blurRadius: 4,
++                          color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
++                          blurRadius: 8,
+                           offset: const Offset(0, 2),
+                         ),
+                       ],
+                     ),
+-                    child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
++                    child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                   ),
+                 ),
+               ),
+@@ -194,7 +394,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
+     );
+   }
+ 
+-  Widget _buildProfileInfo() {
++  Widget _buildProfileInfo(UserProfile profile) {
+     return Padding(
+       padding: const EdgeInsets.fromLTRB(20, 60, 20, 0),
+       child: Column(
+@@ -202,169 +402,212 @@ class _ProfileScreenState extends State<ProfileScreen> {
+         children: [
+           Row(
+             children: [
+-              const Text(
+-                'Sarah Anderson',
++              Text(
++                profile.displayName,
+                 style: TextStyle(
+-                  color: Colors.white,
++                  color: context.onSurface,
+                   fontSize: 22,
+                   fontWeight: FontWeight.w700,
+                 ),
+               ),
+               const SizedBox(width: 6),
+-              Container(
+-                width: 20,
+-                height: 20,
+-                decoration: const BoxDecoration(
+-                  shape: BoxShape.circle,
+-                  color: Color(0xFF3B82F6),
++              if (profile.isVerified)
++                Container(
++                  width: 20,
++                  height: 20,
++                  decoration: const BoxDecoration(
++                    shape: BoxShape.circle,
++                    color: Color(0xFF3B82F6),
++                  ),
++                  child: const Icon(Icons.check, size: 12, color: Colors.white),
+                 ),
+-                child: const Icon(Icons.check, size: 12, color: Colors.white),
+-              ),
+               const Spacer(),
+-              Container(
+-                width: 36,
+-                height: 36,
+-                decoration: BoxDecoration(
+-                  shape: BoxShape.circle,
+-                  color: Colors.white.withValues(alpha: 0.1),
+-                ),
+-                child: Icon(
+-                  Icons.edit,
+-                  size: 16,
+-                  color: Colors.white.withValues(alpha: 0.7),
++              GestureDetector(
++                onTap: () => context.push('/edit-profile'),
++                child: Container(
++                  width: 32,
++                  height: 32,
++                  decoration: BoxDecoration(
++                    shape: BoxShape.circle,
++                    color: Colors.transparent,
++                    border: Border.all(
++                      color: context.onSurface.withValues(alpha: 0.3),
++                      width: 1.5,
++                    ),
++                  ),
++                  child: Icon(
++                    Icons.edit_outlined,
++                    size: 14,
++                    color: context.onSurface.withValues(alpha: 0.7),
++                  ),
+                 ),
+               ),
+             ],
+           ),
+           const SizedBox(height: 4),
+-          const Text(
+-            '@sarahanderson',
+-            style: TextStyle(
++          Text(
++            '@${profile.username}',
++            style: const TextStyle(
+               color: Color(0xFF3B82F6),
+               fontSize: 14,
+             ),
+           ),
+           const SizedBox(height: 12),
+           Text(
+-            'Designer • Entrepreneur • Creator',
++            profile.bio ?? 'No bio yet.',
+             style: TextStyle(
+-              color: Colors.white.withValues(alpha: 0.7),
++              color: context.onSurfaceVariant,
+               fontSize: 14,
+             ),
+           ),
+           const SizedBox(height: 6),
++          // Placeholder for "Magic" or custom status
+           Row(
+             children: [
+               const Text('✨ ', style: TextStyle(fontSize: 14)),
+               Text(
+-                'Building beautiful digital experiences',
++                'Building beautiful digital experiences', 
+                 style: TextStyle(
+-                  color: Colors.white.withValues(alpha: 0.7),
++                  color: context.onSurfaceVariant,
+                   fontSize: 14,
+                 ),
+               ),
+             ],
+           ),
+           const SizedBox(height: 6),
+-          Row(
+-            children: [
+-              const Icon(Icons.location_on, size: 14, color: Color(0xFFEC4899)),
+-              const SizedBox(width: 4),
+-              Text(
+-                'Dubai, UAE',
+-                style: TextStyle(
+-                  color: Colors.white.withValues(alpha: 0.7),
+-                  fontSize: 14,
++          if (profile.location != null)
++            Row(
++              children: [
++                const Icon(Icons.location_on, size: 14, color: Color(0xFFEC4899)),
++                const SizedBox(width: 4),
++                Text(
++                  profile.location!,
++                  style: TextStyle(
++                    color: context.onSurfaceVariant,
++                    fontSize: 14,
++                  ),
+                 ),
+-              ),
+-            ],
+-          ),
++              ],
++            ),
+         ],
+       ),
+     );
+   }
+ 
+-  Widget _buildTrustScore() {
++  Widget _buildTrustScore(UserProfile profile) {
++    final completionPercent = profile.profileCompletionPercentage;
++    final incompleteItems = profile.incompleteItems;
++    final status = profile.statusInfo;
++    
+     return Padding(
+-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
++      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+       child: Container(
+-        padding: const EdgeInsets.all(16),
++        padding: const EdgeInsets.all(18),
+         decoration: BoxDecoration(
+-          color: const Color(0xFF101014),
++          color: context.cardColor,
+           borderRadius: BorderRadius.circular(16),
+           border: Border.all(
+-            color: Colors.white.withValues(alpha: 0.08),
++            color: context.dividerColor,
++            width: 1,
+           ),
+         ),
+-        child: Row(
++        child: Column(
+           children: [
+-            SizedBox(
+-              width: 56,
+-              height: 56,
+-              child: Stack(
+-                alignment: Alignment.center,
+-                children: [
+-                  SizedBox(
+-                    width: 56,
+-                    height: 56,
+-                    child: CircularProgressIndicator(
+-                      value: 0.87,
+-                      strokeWidth: 4,
+-                      backgroundColor: Colors.white.withValues(alpha: 0.1),
+-                      valueColor: const AlwaysStoppedAnimation<Color>(
+-                        Color(0xFF8B5CF6),
++            Row(
++              children: [
++                SizedBox(
++                  width: 60,
++                  height: 60,
++                  child: Stack(
++                    alignment: Alignment.center,
++                    children: [
++                      SizedBox(
++                        width: 60,
++                        height: 60,
++                        child: CircularProgressIndicator(
++                          value: completionPercent / 100,
++                          strokeWidth: 5,
++                          backgroundColor: context.dividerColor.withValues(alpha: 0.3),
++                          valueColor: AlwaysStoppedAnimation<Color>(status.color),
++                        ),
+                       ),
+-                    ),
+-                  ),
+-                  const Text(
+-                    '87%',
+-                    style: TextStyle(
+-                      color: Colors.white,
+-                      fontSize: 14,
+-                      fontWeight: FontWeight.w700,
+-                    ),
+-                  ),
+-                ],
+-              ),
+-            ),
+-            const SizedBox(width: 16),
+-            Expanded(
+-              child: Column(
+-                crossAxisAlignment: CrossAxisAlignment.start,
+-                children: [
+-                  Row(
+-                    children: const [
+-                      Icon(Icons.verified_outlined, size: 16, color: Color(0xFF8B5CF6)),
+-                      SizedBox(width: 6),
+                       Text(
+-                        'Trust Score',
++                        '$completionPercent%',
+                         style: TextStyle(
+-                          color: Colors.white,
+-                          fontSize: 15,
+-                          fontWeight: FontWeight.w600,
++                          color: status.color,
++                          fontSize: 16,
++                          fontWeight: FontWeight.w700,
+                         ),
+                       ),
+                     ],
+                   ),
+-                  const SizedBox(height: 4),
+-                  Text(
+-                    'Complete your profile to increase trust',
+-                    style: TextStyle(
+-                      color: Colors.white.withValues(alpha: 0.5),
+-                      fontSize: 12,
+-                    ),
+-                  ),
+-                  const SizedBox(height: 6),
+-                  const Text(
+-                    'Complete Profile →',
+-                    style: TextStyle(
+-                      color: Color(0xFF8B5CF6),
+-                      fontSize: 12,
+-                      fontWeight: FontWeight.w500,
+-                    ),
++                ),
++                const SizedBox(width: 18),
++                Expanded(
++                  child: Column(
++                    crossAxisAlignment: CrossAxisAlignment.start,
++                    mainAxisSize: MainAxisSize.min,
++                    children: [
++                      Row(
++                        children: [
++                          Container(
++                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
++                            decoration: BoxDecoration(
++                              color: status.color.withValues(alpha: 0.15),
++                              borderRadius: BorderRadius.circular(12),
++                            ),
++                            child: Row(
++                              mainAxisSize: MainAxisSize.min,
++                              children: [
++                                Icon(status.icon, color: status.color, size: 16),
++                                const SizedBox(width: 6),
++                                Text(
++                                  status.label,
++                                  style: TextStyle(
++                                    color: status.color,
++                                    fontSize: 14,
++                                    fontWeight: FontWeight.w600,
++                                  ),
++                                ),
++                              ],
++                            ),
++                          ),
++                          const SizedBox(width: 8),
++                          Text(
++                            'Score: ${status.scoreRange}',
++                            style: TextStyle(
++                              color: context.hintColor,
++                              fontSize: 12,
++                            ),
++                          ),
++                        ],
++                      ),
++                      const SizedBox(height: 8),
++                      Text(
++                        status.benefits.first,
++                        style: TextStyle(
++                          color: context.hintColor,
++                          fontSize: 13,
++                        ),
++                      ),
++                      if (incompleteItems.isNotEmpty) ...[
++                        const SizedBox(height: 8),
++                        GestureDetector(
++                          onTap: () => context.push('/edit-profile'),
++                          child: Text(
++                            'Complete Profile →',
++                            style: TextStyle(
++                              color: status.color,
++                              fontSize: 13,
++                              fontWeight: FontWeight.w600,
++                            ),
++                          ),
++                        ),
++                      ],
++                    ],
+                   ),
+-                ],
+-              ),
++                ),
++              ],
+             ),
+           ],
+         ),
+@@ -372,19 +615,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
+     );
+   }
+ 
+-  Widget _buildStats() {
++
++
++
++
++
++
++
++
++  Widget _buildStats(UserProfile profile) {
+     return Padding(
+       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+       child: Row(
+-        children: const [
+-          _StatColumn(value: '45,237', label: 'Followers'),
+-          _StatColumn(value: '892', label: 'Following'),
+-          _StatColumn(value: '234', label: 'Friends'),
++        children: [
++          _StatColumn(value: _formatNumber(profile.followersCount), label: 'Followers'),
++          _StatColumn(value: _formatNumber(profile.followingCount), label: 'Following'),
++          _StatColumn(value: _formatNumber(profile.postsCount), label: 'Posts'),
+         ],
+       ),
+     );
+   }
+ 
++  String _formatNumber(int number) {
++    if (number >= 1000000) return '${(number/1000000).toStringAsFixed(1)}M';
++    if (number >= 1000) return '${(number/1000).toStringAsFixed(1)}K';
++    return number.toString();
++  }
++
+   Widget _buildCreatePostButton() {
+     return Padding(
+       padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+@@ -399,7 +656,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
+         child: Material(
+           color: Colors.transparent,
+           child: InkWell(
+-            onTap: () {},
++            onTap: () => context.push('/create-post'),
+             borderRadius: BorderRadius.circular(24),
+             child: Center(
+               child: Row(
+@@ -432,19 +689,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
+           Row(
+             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+             children: [
+-              const Text(
++              Text(
+                 'Connections',
+                 style: TextStyle(
+-                  color: Colors.white,
++                  color: context.onSurface,
+                   fontSize: 16,
+                   fontWeight: FontWeight.w600,
+                 ),
+               ),
+-              const Text(
+-                'See All',
+-                style: TextStyle(
+-                  color: Color(0xFF3B82F6),
+-                  fontSize: 14,
++              GestureDetector(
++                onTap: () {
++                  ScaffoldMessenger.of(context).showSnackBar(
++                    const SnackBar(
++                      content: Text('Connections screen coming soon'),
++                      backgroundColor: Color(0xFF3B82F6),
++                    ),
++                  );
++                },
++                child: const Text(
++                  'See All',
++                  style: TextStyle(
++                    color: Color(0xFF3B82F6),
++                    fontSize: 14,
++                  ),
+                 ),
+               ),
+             ],
+@@ -457,6 +724,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
+               itemCount: 6,
+               itemBuilder: (context, index) {
+                 final counts = ['12', '8', '15', '5', '10', '7'];
++                // Mocks for connections avatar
+                 return Padding(
+                   padding: const EdgeInsets.only(right: 12),
+                   child: Stack(
+@@ -466,11 +734,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
+                         height: 48,
+                         decoration: BoxDecoration(
+                           shape: BoxShape.circle,
+-                          image: DecorationImage(
+-                            image: NetworkImage(
+-                              'https://i.pravatar.cc/100?img=${index + 10}',
+-                            ),
++                          color: context.dividerColor,
++                        ),
++                        child: ClipOval(
++                          child: Image.network(
++                            'https://picsum.photos/seed/user${index + 10}/100/100',
++                            width: 48,
++                            height: 48,
+                             fit: BoxFit.cover,
++                            errorBuilder: (context, error, stackTrace) => Container(
++                              width: 48,
++                              height: 48,
++                              decoration: BoxDecoration(
++                                shape: BoxShape.circle,
++                                gradient: LinearGradient(
++                                  colors: [
++                                    Color((0xFF8B5CF6 + index * 0x111111) | 0xFF000000),
++                                    Color((0xFFEC4899 + index * 0x080808) | 0xFF000000),
++                                  ],
++                                ),
++                              ),
++                              child: Center(
++                                child: Text(
++                                  String.fromCharCode(65 + index),
++                                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
++                                ),
++                              ),
++                            ),
+                           ),
+                         ),
+                       ),
+@@ -504,16 +794,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
+     );
+   }
+ 
+-  Widget _buildConnectedPlatforms() {
++  Widget _buildConnectedPlatforms(UserProfile profile) {
++    bool isInstagram = profile.socialLinks?.containsKey('instagram') ?? false;
++    bool isYoutube = profile.socialLinks?.containsKey('youtube') ?? false;
++    bool isFacebook = profile.socialLinks?.containsKey('facebook') ?? false;
++    bool isLinkedin = profile.socialLinks?.containsKey('linkedin') ?? false;
++
++    void updateSocial(String key, bool isConnected) {
++      final newLinks = Map<String, String>.from(profile.socialLinks ?? {});
++      if (isConnected) {
++        newLinks[key] = key;
++      } else {
++        newLinks.remove(key);
++      }
++      ref.read(profileControllerProvider.notifier).updateProfile(socialLinks: newLinks);
++    }
++
+     return Padding(
+       padding: const EdgeInsets.symmetric(horizontal: 20),
+       child: Column(
+         crossAxisAlignment: CrossAxisAlignment.start,
+         children: [
+-          const Text(
++          Text(
+             'Connected Social Platforms',
+             style: TextStyle(
+-              color: Colors.white,
++              color: context.onSurface,
+               fontSize: 16,
+               fontWeight: FontWeight.w600,
+             ),
+@@ -536,9 +841,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
+               borderRadius: BorderRadius.all(Radius.circular(12)),
+             ),
+             name: 'Instagram',
+-            subtitle: _instagramConnected ? 'Connected' : 'Not connected',
+-            isConnected: _instagramConnected,
+-            onChanged: (v) => setState(() => _instagramConnected = v),
++            subtitle: isInstagram ? 'Connected' : 'Not connected',
++            isConnected: isInstagram,
++            onChanged: (v) => updateSocial('instagram', v),
+           ),
+ 
+           _PlatformTile(
+@@ -549,9 +854,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
+               borderRadius: BorderRadius.all(Radius.circular(12)),
+             ),
+             name: 'YouTube',
+-            subtitle: _youtubeConnected ? 'Connected' : 'Not connected',
+-            isConnected: _youtubeConnected,
+-            onChanged: (v) => setState(() => _youtubeConnected = v),
++            subtitle: isYoutube ? 'Connected' : 'Not connected',
++            isConnected: isYoutube,
++            onChanged: (v) => updateSocial('youtube', v),
+           ),
+ 
+           _PlatformTile(
+@@ -562,9 +867,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
+               borderRadius: BorderRadius.all(Radius.circular(12)),
+             ),
+             name: 'Facebook',
+-            subtitle: _facebookConnected ? 'Connected' : 'Not connected',
+-            isConnected: _facebookConnected,
+-            onChanged: (v) => setState(() => _facebookConnected = v),
++            subtitle: isFacebook ? 'Connected' : 'Not connected',
++            isConnected: isFacebook,
++            onChanged: (v) => updateSocial('facebook', v),
+           ),
+ 
+           _PlatformTile(
+@@ -575,28 +880,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
+               borderRadius: BorderRadius.all(Radius.circular(12)),
+             ),
+             name: 'LinkedIn',
+-            subtitle: _linkedinConnected ? 'Connected' : 'Not connected',
+-            isConnected: _linkedinConnected,
+-            onChanged: (v) => setState(() => _linkedinConnected = v),
++            subtitle: isLinkedin ? 'Connected' : 'Not connected',
++            isConnected: isLinkedin,
++            onChanged: (v) => updateSocial('linkedin', v),
+           ),
+ 
+           const SizedBox(height: 16),
+-          Container(
+-            height: 48,
+-            decoration: BoxDecoration(
+-              color: Colors.transparent,
+-              borderRadius: BorderRadius.circular(24),
+-              border: Border.all(
+-                color: Colors.white.withValues(alpha: 0.15),
++          GestureDetector(
++            onTap: () {
++              ScaffoldMessenger.of(context).showSnackBar(
++                const SnackBar(
++                  content: Text('Manage Connections coming soon'),
++                  backgroundColor: Color(0xFF3B82F6),
++                ),
++              );
++            },
++            child: Container(
++              height: 48,
++              decoration: BoxDecoration(
++                color: Colors.transparent,
++                borderRadius: BorderRadius.circular(24),
++                border: Border.all(
++                  color: context.dividerColor,
++                ),
+               ),
+-            ),
+-            child: Center(
+-              child: Text(
+-                'Manage Connections',
+-                style: TextStyle(
+-                  color: Colors.white.withValues(alpha: 0.8),
+-                  fontSize: 14,
+-                  fontWeight: FontWeight.w500,
++              child: Center(
++                child: Text(
++                  'Manage Connections',
++                  style: TextStyle(
++                    color: context.onSurface.withValues(alpha: 0.8),
++                    fontSize: 14,
++                    fontWeight: FontWeight.w500,
++                  ),
+                 ),
+               ),
+             ),
+@@ -614,10 +929,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
+         children: [
+           Row(
+             children: [
+-              const Text(
++              Text(
+                 'Privacy Controls',
+                 style: TextStyle(
+-                  color: Colors.white,
++                  color: context.onSurface,
+                   fontSize: 16,
+                   fontWeight: FontWeight.w600,
+                 ),
+@@ -626,7 +941,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
+               Icon(
+                 Icons.lock_outline,
+                 size: 16,
+-                color: Colors.white.withValues(alpha: 0.5),
++                color: context.iconColor,
+               ),
+             ],
+           ),
+@@ -671,7 +986,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
+       decoration: BoxDecoration(
+         border: Border(
+           bottom: BorderSide(
+-            color: Colors.white.withValues(alpha: 0.08),
++            color: context.dividerColor,
+           ),
+         ),
+       ),
+@@ -691,7 +1006,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
+                       style: TextStyle(
+                         color: isSelected
+                             ? const Color(0xFF3B82F6)
+-                            : Colors.white.withValues(alpha: 0.5),
++                            : context.hintColor,
+                         fontSize: 14,
+                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                       ),
+@@ -711,123 +1026,145 @@ class _ProfileScreenState extends State<ProfileScreen> {
+       ),
+     );
+   }
++  void _showPostOptions(BuildContext context, Post post) {
++    final currentUserId = ref.read(currentUserIdProvider);
++    final isOwner = post.authorId == currentUserId;
+ 
+-  Widget _buildPostCard() {
+-    return Container(
+-      decoration: BoxDecoration(
+-        color: const Color(0xFF101014),
+-        borderRadius: BorderRadius.circular(16),
+-        border: Border.all(
+-          color: Colors.white.withValues(alpha: 0.08),
+-        ),
++    showModalBottomSheet(
++      context: context,
++      backgroundColor: context.cardColor,
++      isScrollControlled: true,
++      shape: const RoundedRectangleBorder(
++        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+       ),
+-      child: Column(
+-        crossAxisAlignment: CrossAxisAlignment.start,
+-        children: [
+-          ClipRRect(
+-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+-            child: Container(
+-              height: 280,
+-              width: double.infinity,
+-              decoration: const BoxDecoration(
+-                image: DecorationImage(
+-                  image: NetworkImage(
+-                    'https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600&h=400&fit=crop',
+-                  ),
+-                  fit: BoxFit.cover,
+-                ),
++      builder: (context) => SafeArea(
++        child: Column(
++          mainAxisSize: MainAxisSize.min,
++          children: [
++            Container(
++              margin: const EdgeInsets.only(top: 12, bottom: 8),
++              width: 40,
++              height: 4,
++              decoration: BoxDecoration(
++                color: context.hintColor.withValues(alpha: 0.3),
++                borderRadius: BorderRadius.circular(2),
+               ),
+             ),
+-          ),
+-          Padding(
+-            padding: const EdgeInsets.all(16),
+-            child: Column(
+-              crossAxisAlignment: CrossAxisAlignment.start,
+-              children: [
+-                Row(
+-                  children: [
+-                    Icon(
+-                      Icons.favorite_border,
+-                      size: 20,
+-                      color: Colors.white.withValues(alpha: 0.7),
+-                    ),
+-                    const SizedBox(width: 6),
+-                    Text(
+-                      '1,234',
+-                      style: TextStyle(
+-                        color: Colors.white.withValues(alpha: 0.7),
+-                        fontSize: 13,
+-                      ),
+-                    ),
+-                    const SizedBox(width: 20),
+-                    Icon(
+-                      Icons.chat_bubble_outline,
+-                      size: 18,
+-                      color: Colors.white.withValues(alpha: 0.7),
+-                    ),
+-                    const SizedBox(width: 6),
+-                    Text(
+-                      '89',
+-                      style: TextStyle(
+-                        color: Colors.white.withValues(alpha: 0.7),
+-                        fontSize: 13,
+-                      ),
+-                    ),
+-                    const SizedBox(width: 20),
+-                    Icon(
+-                      Icons.share_outlined,
+-                      size: 18,
+-                      color: Colors.white.withValues(alpha: 0.7),
+-                    ),
+-                    const Spacer(),
+-                    Icon(
+-                      Icons.more_horiz,
+-                      size: 20,
+-                      color: Colors.white.withValues(alpha: 0.5),
+-                    ),
+-                  ],
+-                ),
+-                const SizedBox(height: 12),
+-                const Text(
+-                  'New design system launching soon! 🎨 ✨',
+-                  style: TextStyle(
+-                    color: Colors.white,
+-                    fontSize: 14,
+-                  ),
++            if (isOwner) ...[
++              /*
++              // Temporarily disabled until setCommentsEnabled is implemented
++              if (post.commentsEnabled)
++                ListTile(
++                  leading: Icon(Icons.comments_disabled_outlined, color: context.iconColor),
++                  title: Text('Turn off comments', style: TextStyle(color: context.onSurface)),
++                  onTap: () {
++                    Navigator.pop(context);
++                    ref.read(postsControllerProvider.notifier)
++                        .setCommentsEnabled(postId: post.id, enabled: false);
++                  },
++                )
++              else
++                ListTile(
++                  leading: Icon(Icons.comment_outlined, color: context.iconColor),
++                  title: Text('Turn on comments', style: TextStyle(color: context.onSurface)),
++                  onTap: () {
++                    Navigator.pop(context);
++                    ref.read(postsControllerProvider.notifier)
++                        .setCommentsEnabled(postId: post.id, enabled: true);
++                  },
+                 ),
+-                const SizedBox(height: 6),
+-                Text(
+-                  '2h ago',
+-                  style: TextStyle(
+-                    color: Colors.white.withValues(alpha: 0.4),
+-                    fontSize: 12,
+-                  ),
+-                ),
+-              ],
+-            ),
+-          ),
+-        ],
++                */
++              ListTile(
++                leading: Icon(Icons.edit_outlined, color: context.iconColor),
++                title: Text('Edit post', style: TextStyle(color: context.onSurface)),
++                onTap: () {
++                  Navigator.pop(context);
++                  context.push('/edit-post', extra: post);
++                },
++              ),
++              ListTile(
++                leading: const Icon(Icons.delete_outline, color: Color(0xFFEF4444)),
++                title: const Text('Delete post', style: TextStyle(color: Color(0xFFEF4444))),
++                onTap: () {
++                   Navigator.pop(context);
++                   _confirmDelete(context, post);
++                },
++              ),
++            ] else ...[
++               ListTile(
++                leading: const Icon(Icons.report_gmailerrorred_outlined, color: Color(0xFFEF4444)),
++                title: const Text('Report post', style: TextStyle(color: Color(0xFFEF4444))),
++                onTap: () {
++                   Navigator.pop(context);
++                   ScaffoldMessenger.of(context).showSnackBar(
++                      const SnackBar(content: Text('Post reported')),
++                    );
++                },
++              ),
++               ListTile(
++                leading: const Icon(Icons.not_interested, color: Colors.white),
++                title: Text('Not interested', style: TextStyle(color: context.onSurface)),
++                onTap: () {
++                   Navigator.pop(context);
++                },
++              ),
++            ],
++            const SizedBox(height: 16),
++          ],
++        ),
+       ),
+     );
+   }
++
++  void _confirmDelete(BuildContext context, Post post) {
++      showDialog(
++        context: context,
++        builder: (context) => AlertDialog(
++          backgroundColor: context.cardColor,
++          title: Text('Delete Post', style: TextStyle(color: context.onSurface)),
++          content: Text(
++            'Are you sure you want to delete this post? This action cannot be undone.',
++            style: TextStyle(color: context.onSurfaceVariant),
++          ),
++          actions: [
++            TextButton(
++               onPressed: () => Navigator.pop(context),
++               child: Text('Cancel', style: TextStyle(color: context.hintColor)),
++            ),
++             TextButton(
++               onPressed: () {
++                  Navigator.pop(context);
++                  ref.read(postsControllerProvider.notifier).deletePost(post.id);
++               },
++               child: const Text('Delete', style: TextStyle(color: Color(0xFFEF4444))),
++            ),
++          ],
++        ),
++      );
++  }
+ }
+ 
+ class _StatColumn extends StatelessWidget {
+   final String value;
+   final String label;
+ 
+-  const _StatColumn({required this.value, required this.label});
++  const _StatColumn({
++    required this.value,
++    required this.label,
++  });
+ 
+   @override
+   Widget build(BuildContext context) {
+-    return Expanded(
++    return Padding(
++      padding: const EdgeInsets.only(right: 24),
+       child: Column(
++        crossAxisAlignment: CrossAxisAlignment.start,
+         children: [
+           Text(
+             value,
+-            style: const TextStyle(
+-              color: Colors.white,
+-              fontSize: 20,
++            style: TextStyle(
++              color: context.onSurface,
++              fontSize: 18,
+               fontWeight: FontWeight.w700,
+             ),
+           ),
+@@ -835,8 +1172,8 @@ class _StatColumn extends StatelessWidget {
+           Text(
+             label,
+             style: TextStyle(
+-              color: Colors.white.withValues(alpha: 0.5),
+-              fontSize: 12,
++              color: context.hintColor,
++              fontSize: 13,
+             ),
+           ),
+         ],
+@@ -848,7 +1185,7 @@ class _StatColumn extends StatelessWidget {
+ class _PlatformTile extends StatelessWidget {
+   final IconData icon;
+   final Color iconColor;
+-  final BoxDecoration? iconDecoration;
++  final BoxDecoration iconDecoration;
+   final String name;
+   final String subtitle;
+   final bool isConnected;
+@@ -857,38 +1194,27 @@ class _PlatformTile extends StatelessWidget {
+   const _PlatformTile({
+     required this.icon,
+     required this.iconColor,
++    required this.iconDecoration,
+     required this.name,
+     required this.subtitle,
+     required this.isConnected,
+     required this.onChanged,
+-    this.iconDecoration,
+   });
+ 
+   @override
+   Widget build(BuildContext context) {
+-    final decoration = iconDecoration ??
+-        BoxDecoration(
+-          color: Colors.white.withValues(alpha: 0.08),
+-          borderRadius: BorderRadius.circular(12),
+-          border: Border.all(
+-            color: Colors.white.withValues(alpha: 0.10),
+-          ),
+-        );
+-
+     return Padding(
+-      padding: const EdgeInsets.only(bottom: 12),
++      padding: const EdgeInsets.only(bottom: 16),
+       child: Row(
+         children: [
+           Container(
+             width: 40,
+             height: 40,
+-            decoration: decoration,
+-            child: Center(
+-              child: FaIcon(
+-                icon,
+-                color: iconColor,
+-                size: 18,
+-              ),
++            decoration: iconDecoration,
++            child: Icon(
++              icon,
++              size: 20,
++              color: iconColor,
+             ),
+           ),
+           const SizedBox(width: 12),
+@@ -898,17 +1224,18 @@ class _PlatformTile extends StatelessWidget {
+               children: [
+                 Text(
+                   name,
+-                  style: const TextStyle(
+-                    color: Colors.white,
+-                    fontSize: 14,
+-                    fontWeight: FontWeight.w600,
++                  style: TextStyle(
++                    color: context.onSurface,
++                    fontSize: 15,
++                    fontWeight: FontWeight.w500,
+                   ),
+                 ),
+-                const SizedBox(height: 2),
+                 Text(
+                   subtitle,
+                   style: TextStyle(
+-                    color: Colors.white.withValues(alpha: 0.5),
++                    color: isConnected
++                        ? const Color(0xFF10B981)
++                        : context.hintColor,
+                     fontSize: 12,
+                   ),
+                 ),
+@@ -918,7 +1245,10 @@ class _PlatformTile extends StatelessWidget {
+           Switch(
+             value: isConnected,
+             onChanged: onChanged,
+-            activeTrackColor: const Color(0xFF3B82F6),
++            activeThumbColor: const Color(0xFF3B82F6),
++            activeTrackColor: const Color(0xFF3B82F6).withValues(alpha: 0.2),
++            inactiveThumbColor: context.hintColor,
++            inactiveTrackColor: context.dividerColor,
+           ),
+         ],
+       ),
+@@ -939,55 +1269,95 @@ class _PrivacyRow extends StatelessWidget {
+     required this.onChanged,
+   });
+ 
++  static const _options = ['Private', 'Friends Only', 'Public'];
++
+   @override
+   Widget build(BuildContext context) {
+     return Padding(
+-      padding: const EdgeInsets.only(bottom: 12),
++      padding: const EdgeInsets.only(bottom: 16),
+       child: Row(
+         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+         children: [
+           Text(
+             label,
+-            style: const TextStyle(
+-              color: Colors.white,
+-              fontSize: 14,
++            style: TextStyle(
++              color: context.onSurface,
++              fontSize: 15,
++              fontWeight: FontWeight.w500,
+             ),
+           ),
+-          Container(
+-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+-            decoration: BoxDecoration(
+-              color: isPurple
+-                  ? const Color(0xFF8B5CF6).withValues(alpha: 0.15)
+-                  : Colors.white.withValues(alpha: 0.05),
+-              borderRadius: BorderRadius.circular(8),
+-              border: Border.all(
++          PopupMenuButton<String>(
++            initialValue: value,
++            onSelected: onChanged,
++            color: context.cardColor,
++            shape: RoundedRectangleBorder(
++              borderRadius: BorderRadius.circular(12),
++            ),
++            offset: const Offset(0, 40),
++            itemBuilder: (context) => _options.map((option) {
++              final isSelected = option == value;
++              final isPrivate = option == 'Private';
++              return PopupMenuItem<String>(
++                value: option,
++                child: Row(
++                  children: [
++                    Icon(
++                      isPrivate ? Icons.lock : (option == 'Friends Only' ? Icons.people : Icons.public),
++                      size: 18,
++                      color: isSelected ? const Color(0xFF8B5CF6) : context.hintColor,
++                    ),
++                    const SizedBox(width: 10),
++                    Text(
++                      option,
++                      style: TextStyle(
++                        color: isSelected ? const Color(0xFF8B5CF6) : context.onSurface,
++                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
++                      ),
++                    ),
++                    if (isSelected) ...[
++                      const Spacer(),
++                      const Icon(Icons.check, size: 18, color: Color(0xFF8B5CF6)),
++                    ],
++                  ],
++                ),
++              );
++            }).toList(),
++            child: Container(
++              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
++              decoration: BoxDecoration(
+                 color: isPurple
+-                    ? const Color(0xFF8B5CF6).withValues(alpha: 0.3)
+-                    : Colors.white.withValues(alpha: 0.1),
++                    ? const Color(0xFF8B5CF6).withValues(alpha: 0.1)
++                    : context.onSurface.withValues(alpha: 0.05),
++                borderRadius: BorderRadius.circular(20),
++                border: Border.all(
++                  color: isPurple
++                      ? const Color(0xFF8B5CF6).withValues(alpha: 0.3)
++                      : context.dividerColor,
++                ),
+               ),
+-            ),
+-            child: Row(
+-              mainAxisSize: MainAxisSize.min,
+-              children: [
+-                Text(
+-                  value,
+-                  style: TextStyle(
++              child: Row(
++                mainAxisSize: MainAxisSize.min,
++                children: [
++                  Text(
++                    value,
++                    style: TextStyle(
++                      color: isPurple
++                          ? const Color(0xFF8B5CF6)
++                          : context.onSurface.withValues(alpha: 0.6),
++                      fontSize: 12,
++                      fontWeight: FontWeight.w500,
++                    ),
++                  ),
++                  const SizedBox(width: 4),
++                  Icon(
++                    Icons.keyboard_arrow_down,
++                    size: 16,
+                     color: isPurple
+                         ? const Color(0xFF8B5CF6)
+-                        : Colors.white.withValues(alpha: 0.7),
+-                    fontSize: 13,
+-                    fontWeight: FontWeight.w500,
++                        : context.onSurface.withValues(alpha: 0.6),
+                   ),
+-                ),
+-                const SizedBox(width: 8),
+-                Icon(
+-                  Icons.keyboard_arrow_down,
+-                  size: 16,
+-                  color: isPurple
+-                      ? const Color(0xFF8B5CF6)
+-                      : Colors.white.withValues(alpha: 0.7),
+-                ),
+-              ],
++                ],
++              ),
+             ),
+           ),
+         ],
+@@ -995,3 +1365,4 @@ class _PrivacyRow extends StatelessWidget {
+     );
+   }
+ }
++
+diff --git a/lib/features/social/application/posts_controller.dart b/lib/features/social/application/posts_controller.dart
+index 669e2ee..11bf7b6 100644
+--- a/lib/features/social/application/posts_controller.dart
++++ b/lib/features/social/application/posts_controller.dart
+@@ -1,11 +1,16 @@
+ import 'package:flutter_riverpod/flutter_riverpod.dart';
+ import 'package:http/http.dart' as http;
+ import 'package:shared_preferences/shared_preferences.dart';
++import '../models/post_data.dart';
+ import '../domain/entities/post.dart';
+ import '../domain/repositories/posts_repository.dart';
+-import '../data/repositories/posts_repository_impl.dart';
++
+ import '../data/datasources/posts_remote_data_source.dart';
+ import '../data/datasources/posts_local_data_source.dart';
++import '../data/local/local_posts_repository.dart';
++import '../../../core/validation/validators.dart';
++
++const String kCurrentUserId = 'currentUser';
+ 
+ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+   throw UnimplementedError('SharedPreferences must be overridden in main.dart');
+@@ -26,13 +31,7 @@ final postsLocalDataSourceProvider = Provider<PostsLocalDataSource>((ref) {
+ });
+ 
+ final postsRepositoryProvider = Provider<PostsRepository>((ref) {
+-  final remote = ref.watch(postsRemoteDataSourceProvider);
+-  final local = ref.watch(postsLocalDataSourceProvider);
+-  return PostsRepositoryImpl(
+-    remoteDataSource: remote,
+-    localDataSource: local,
+-    useMockData: true,
+-  );
++  return LocalPostsRepository();
+ });
+ 
+ final feedProvider = FutureProvider.family<List<Post>, int>((ref, page) async {
+@@ -95,8 +94,8 @@ class PostsController extends StateNotifier<AsyncValue<List<Post>>> {
+       _currentPage++;
+       _hasMore = newPosts.length >= 20;
+       state = AsyncValue.data([...currentPosts, ...newPosts]);
+-    } catch (e) {
+-      
++    } catch (e, st) {
++      state = AsyncValue.error(e, st);
+     }
+   }
+ 
+@@ -109,47 +108,156 @@ class PostsController extends StateNotifier<AsyncValue<List<Post>>> {
+     List<String>? mediaUrls,
+     String? mediaType,
+     String? location,
++    PostVisibility visibility = PostVisibility.public,
++    List<PostMedia> media = const [],
+   }) async {
++    final contentValidation = Validators.combine([
++      Validators.required(content, fieldName: 'محتوى المنشور'),
++      Validators.maxLength(content, 5000, fieldName: 'محتوى المنشور'),
++    ]);
++
++    if (!contentValidation.isValid) {
++      state = AsyncValue.error(
++        Exception(contentValidation.errorMessage),
++        StackTrace.current,
++      );
++      return;
++    }
++
++    if (media.isNotEmpty) {
++      final mediaValidation = Validators.listMaxLength(
++        media,
++        10,
++        fieldName: 'الصور والفيديوهات',
++      );
++      
++      if (!mediaValidation.isValid) {
++        state = AsyncValue.error(
++          Exception(mediaValidation.errorMessage),
++          StackTrace.current,
++        );
++        return;
++      }
++    }
++
+     try {
+       final newPost = await _repository.createPost(
+-        content: content,
++        content: content.trim(),
+         mediaUrls: mediaUrls,
+         mediaType: mediaType,
+         location: location,
+       );
++      final postWithPostVisibility = newPost.copyWith(
++        visibility: visibility,
++        media: media,
++      );
+       final currentPosts = state.valueOrNull ?? [];
+-      state = AsyncValue.data([newPost, ...currentPosts]);
++      state = AsyncValue.data([postWithPostVisibility, ...currentPosts]);
+     } catch (e, st) {
+       state = AsyncValue.error(e, st);
+     }
+   }
+ 
++  Future<void> updatePost({
++    required String postId,
++    String? content,
++    PostVisibility? visibility,
++    List<PostMedia>? media,
++    List<String>? mediaUrls,
++  }) async {
++    final currentPosts = state.valueOrNull ?? [];
++    final index = currentPosts.indexWhere((p) => p.id == postId);
++    if (index < 0) return;
++
++    final post = currentPosts[index];
++    final updatedPost = post.copyWith(
++      content: content,
++      visibility: visibility,
++      media: media,
++      mediaUrls: mediaUrls,
++      updatedAt: DateTime.now(),
++    );
++
++    final updatedPosts = [...currentPosts];
++    updatedPosts[index] = updatedPost;
++    state = AsyncValue.data(updatedPosts);
++  }
++
+   Future<void> deletePost(String postId) async {
++    final currentPosts = state.valueOrNull ?? [];
++    final index = currentPosts.indexWhere((p) => p.id == postId);
++    if (index < 0) return;
++    
++    final deletedPost = currentPosts[index];
++    
++    state = AsyncValue.data(
++      currentPosts.where((p) => p.id != postId).toList(),
++    );
++
+     try {
+       await _repository.deletePost(postId);
+-      final currentPosts = state.valueOrNull ?? [];
+-      state = AsyncValue.data(currentPosts.where((p) => p.id != postId).toList());
+-    } catch (e) {
+-      
++    } catch (_) {
++      final revertPosts = state.valueOrNull ?? [];
++      final insertIndex = index.clamp(0, revertPosts.length);
++      final updatedPosts = [...revertPosts];
++      updatedPosts.insert(insertIndex, deletedPost);
++      state = AsyncValue.data(updatedPosts);
+     }
+   }
+ 
++  Future<void> setCommentsEnabled({
++    required String postId,
++    required bool enabled,
++  }) async {
++    final currentPosts = state.valueOrNull ?? [];
++    final index = currentPosts.indexWhere((p) => p.id == postId);
++    if (index < 0) return;
++
++    final post = currentPosts[index];
++    final updatedPost = post.copyWith(commentsEnabled: enabled);
++
++    final updatedPosts = [...currentPosts];
++    updatedPosts[index] = updatedPost;
++    state = AsyncValue.data(updatedPosts);
++  }
++
+   Future<void> toggleLike(String postId) async {
+     final currentPosts = state.valueOrNull ?? [];
+     final index = currentPosts.indexWhere((p) => p.id == postId);
+     if (index < 0) return;
+ 
+     final post = currentPosts[index];
++    final wasLiked = post.isLiked;
++    
++    final optimisticPost = post.copyWith(
++      isLiked: !wasLiked,
++      likesCount: wasLiked ? post.likesCount - 1 : post.likesCount + 1,
++    );
++    
++    final optimisticPosts = [...currentPosts];
++    optimisticPosts[index] = optimisticPost;
++    state = AsyncValue.data(optimisticPosts);
++
+     try {
+-      final updatedPost = post.isLiked
++      final serverPost = wasLiked
+           ? await _repository.unlikePost(postId)
+           : await _repository.likePost(postId);
+       
+-      final updatedPosts = [...currentPosts];
+-      updatedPosts[index] = updatedPost;
+-      state = AsyncValue.data(updatedPosts);
+-    } catch (e) {
+-      
++      final finalPosts = state.valueOrNull ?? [];
++      final finalIndex = finalPosts.indexWhere((p) => p.id == postId);
++      if (finalIndex >= 0) {
++        final updatedPosts = [...finalPosts];
++        updatedPosts[finalIndex] = serverPost;
++        state = AsyncValue.data(updatedPosts);
++      }
++    } catch (_) {
++      final revertPosts = state.valueOrNull ?? [];
++      final revertIndex = revertPosts.indexWhere((p) => p.id == postId);
++      if (revertIndex >= 0) {
++        final updatedPosts = [...revertPosts];
++        updatedPosts[revertIndex] = post;
++        state = AsyncValue.data(updatedPosts);
++      }
+     }
+   }
+ 
+@@ -159,16 +267,70 @@ class PostsController extends StateNotifier<AsyncValue<List<Post>>> {
+     if (index < 0) return;
+ 
+     final post = currentPosts[index];
++    final wasBookmarked = post.isBookmarked;
++    
++    final optimisticPost = post.copyWith(
++      isBookmarked: !wasBookmarked,
++    );
++    
++    final optimisticPosts = [...currentPosts];
++    optimisticPosts[index] = optimisticPost;
++    state = AsyncValue.data(optimisticPosts);
++
+     try {
+-      final updatedPost = post.isBookmarked
++      final serverPost = wasBookmarked
+           ? await _repository.unbookmarkPost(postId)
+           : await _repository.bookmarkPost(postId);
+       
+-      final updatedPosts = [...currentPosts];
+-      updatedPosts[index] = updatedPost;
+-      state = AsyncValue.data(updatedPosts);
+-    } catch (e) {
+-      
++      final finalPosts = state.valueOrNull ?? [];
++      final finalIndex = finalPosts.indexWhere((p) => p.id == postId);
++      if (finalIndex >= 0) {
++        final updatedPosts = [...finalPosts];
++        updatedPosts[finalIndex] = serverPost;
++        state = AsyncValue.data(updatedPosts);
++      }
++    } catch (_) {
++      final revertPosts = state.valueOrNull ?? [];
++      final revertIndex = revertPosts.indexWhere((p) => p.id == postId);
++      if (revertIndex >= 0) {
++        final updatedPosts = [...revertPosts];
++        updatedPosts[revertIndex] = post;
++        state = AsyncValue.data(updatedPosts);
++      }
++    }
++  }
++
++  Future<void> reactToPost(String postId, ReactionType type) async {
++    final currentPosts = state.valueOrNull ?? [];
++    final index = currentPosts.indexWhere((p) => p.id == postId);
++    if (index < 0) return;
++
++    final post = currentPosts[index];
++    
++    final bool clearReaction = post.userReaction == type;
++    
++    final updatedPost = post.copyWith(
++      userReaction: clearReaction ? null : type,
++      clearUserReaction: clearReaction,
++      isLiked: !clearReaction,
++      likesCount: (post.userReaction == null && !clearReaction) 
++          ? post.likesCount + 1 
++          : (post.userReaction != null && clearReaction)
++              ? post.likesCount - 1
++              : post.likesCount,
++    );
++
++    final updatedPosts = [...currentPosts];
++    updatedPosts[index] = updatedPost;
++    state = AsyncValue.data(updatedPosts);
++  }
++
++  Post? getPostById(String postId) {
++    final posts = state.valueOrNull ?? [];
++    try {
++      return posts.firstWhere((p) => p.id == postId);
++    } catch (_) {
++      return null;
+     }
+   }
+ }
+@@ -181,8 +343,9 @@ final postsControllerProvider = StateNotifierProvider<PostsController, AsyncValu
+ class CommentsController extends StateNotifier<AsyncValue<List<Comment>>> {
+   final PostsRepository _repository;
+   final String postId;
++  final Ref _ref;
+ 
+-  CommentsController(this._repository, this.postId) : super(const AsyncValue.loading()) {
++  CommentsController(this._repository, this.postId, this._ref) : super(const AsyncValue.loading()) {
+     loadComments();
+   }
+ 
+@@ -197,27 +360,179 @@ class CommentsController extends StateNotifier<AsyncValue<List<Comment>>> {
+   }
+ 
+   Future<void> addComment(String content, {String? parentCommentId}) async {
++    final contentValidation = Validators.combine([
++      Validators.required(content, fieldName: 'التعليق'),
++      Validators.maxLength(content, 1000, fieldName: 'التعليق'),
++    ]);
++
++    if (!contentValidation.isValid) {
++      state = AsyncValue.error(
++        Exception(contentValidation.errorMessage),
++        StackTrace.current,
++      );
++      return;
++    }
++
+     try {
+-      final newComment = await _repository.addComment(postId, content, parentCommentId: parentCommentId);
++      final newComment = await _repository.addComment(
++        postId,
++        content.trim(),
++        parentCommentId: parentCommentId,
++      );
+       final currentComments = state.valueOrNull ?? [];
+       state = AsyncValue.data([...currentComments, newComment]);
+-    } catch (e) {
+       
++      _ref.read(postsControllerProvider.notifier).state.whenData((posts) {
++        final index = posts.indexWhere((p) => p.id == postId);
++        if (index >= 0) {
++          final post = posts[index];
++          final updatedPost = post.copyWith(commentsCount: post.commentsCount + 1);
++          final updatedPosts = [...posts];
++          updatedPosts[index] = updatedPost;
++          _ref.read(postsControllerProvider.notifier).state = AsyncValue.data(updatedPosts);
++        }
++      });
++    } catch (e, st) {
++      state = AsyncValue.error(e, st);
+     }
+   }
+ 
+-  Future<void> deleteComment(String commentId) async {
++  Future<void> editComment({
++    required String commentId,
++    required String content,
++  }) async {
+     try {
+-      await _repository.deleteComment(postId, commentId);
++      final updatedComment = await _repository.updateComment(postId, commentId, content);
+       final currentComments = state.valueOrNull ?? [];
+-      state = AsyncValue.data(currentComments.where((c) => c.id != commentId).toList());
+-    } catch (e) {
+-      
++      final index = currentComments.indexWhere((c) => c.id == commentId);
++      if (index >= 0) {
++        final updatedComments = [...currentComments];
++        updatedComments[index] = updatedComment;
++        state = AsyncValue.data(updatedComments);
++      }
++    } catch (e, st) {
++      state = AsyncValue.error(e, st);
++    }
++  }
++
++  Future<void> addReply({
++    required String parentCommentId,
++    required String text,
++  }) async {
++    await addComment(text, parentCommentId: parentCommentId);
++  }
++
++  Future<void> deleteComment({
++    required String commentId,
++    required String requestedByUserId,
++  }) async {
++    final currentComments = state.valueOrNull ?? [];
++    final index = currentComments.indexWhere((c) => c.id == commentId);
++    if (index < 0) return;
++
++    final comment = currentComments[index];
++    
++    final post = _ref.read(postsControllerProvider.notifier).getPostById(postId);
++    final isPostOwner = post?.authorId == requestedByUserId;
++    final isCommentOwner = comment.authorId == requestedByUserId;
++    
++    if (!isPostOwner && !isCommentOwner) return;
++
++    try {
++      await _repository.deleteComment(postId, commentId);
++      final updatedComments = [...currentComments];
++      updatedComments.removeAt(index);
++      state = AsyncValue.data(updatedComments);
++    } catch (e, st) {
++      state = AsyncValue.error(e, st);
++    }
++  }
++
++  Future<void> reactToComment({
++    required String commentId,
++    required String userId,
++    required ReactionType type,
++  }) async {
++    final currentComments = state.valueOrNull ?? [];
++    final index = currentComments.indexWhere((c) => c.id == commentId);
++    if (index < 0) return;
++
++    final comment = currentComments[index];
++    final bool clearReaction = comment.userReaction == type;
++    
++    final newReactionCounts = Map<ReactionType, int>.from(comment.reactionCounts);
++    
++    if (comment.userReaction != null) {
++      final oldCount = newReactionCounts[comment.userReaction] ?? 0;
++      if (oldCount > 1) {
++        newReactionCounts[comment.userReaction!] = oldCount - 1;
++      } else {
++        newReactionCounts.remove(comment.userReaction);
++      }
++    }
++    
++    if (!clearReaction) {
++      newReactionCounts[type] = (newReactionCounts[type] ?? 0) + 1;
+     }
++
++    final updatedComment = comment.copyWith(
++      userReaction: clearReaction ? null : type,
++      clearUserReaction: clearReaction,
++      reactionCounts: newReactionCounts,
++      likesCount: clearReaction 
++          ? (comment.likesCount > 0 ? comment.likesCount - 1 : 0)
++          : (comment.userReaction == null ? comment.likesCount + 1 : comment.likesCount),
++    );
++
++    final updatedComments = [...currentComments];
++    updatedComments[index] = updatedComment;
++    state = AsyncValue.data(updatedComments);
++  }
++
++  Future<void> removeReactionFromComment({
++    required String commentId,
++    required String userId,
++  }) async {
++    final currentComments = state.valueOrNull ?? [];
++    final index = currentComments.indexWhere((c) => c.id == commentId);
++    if (index < 0) return;
++
++    final comment = currentComments[index];
++    if (comment.userReaction == null) return;
++
++    final newReactionCounts = Map<ReactionType, int>.from(comment.reactionCounts);
++    final oldCount = newReactionCounts[comment.userReaction] ?? 0;
++    if (oldCount > 1) {
++      newReactionCounts[comment.userReaction!] = oldCount - 1;
++    } else {
++      newReactionCounts.remove(comment.userReaction);
++    }
++
++    final updatedComment = comment.copyWith(
++      clearUserReaction: true,
++      reactionCounts: newReactionCounts,
++      likesCount: comment.likesCount > 0 ? comment.likesCount - 1 : 0,
++    );
++
++    final updatedComments = [...currentComments];
++    updatedComments[index] = updatedComment;
++    state = AsyncValue.data(updatedComments);
++  }
++
++  List<Comment> getTopLevelComments() {
++    final comments = state.valueOrNull ?? [];
++    return comments.where((c) => c.parentCommentId == null).toList()
++      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
++  }
++
++  List<Comment> getReplies(String parentCommentId) {
++    final comments = state.valueOrNull ?? [];
++    return comments.where((c) => c.parentCommentId == parentCommentId).toList()
++      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+   }
+ }
+ 
+ final commentsControllerProvider = StateNotifierProvider.family<CommentsController, AsyncValue<List<Comment>>, String>((ref, postId) {
+   final repository = ref.watch(postsRepositoryProvider);
+-  return CommentsController(repository, postId);
++  return CommentsController(repository, postId, ref);
+ });
+diff --git a/lib/features/social/data/local/local_posts_repository.dart b/lib/features/social/data/local/local_posts_repository.dart
+new file mode 100644
+index 0000000..5404942
+--- /dev/null
++++ b/lib/features/social/data/local/local_posts_repository.dart
+@@ -0,0 +1,337 @@
++import 'dart:async';
++import 'dart:math';
++
++import '../../domain/entities/post.dart';
++import '../../domain/repositories/posts_repository.dart';
++
++
++class LocalPostsRepository implements PostsRepository {
++  final List<Post> _posts = [];
++  final Map<String, List<Comment>> _comments = {};
++
++  LocalPostsRepository() {
++    _seedData();
++  }
++
++  void _seedData() {
++    _posts.addAll([
++      Post(
++        id: '1',
++        authorId: 'user1',
++        authorName: 'Sarah Johnson',
++        authorUsername: 'sarahj',
++        authorAvatarUrl: 'https://i.pravatar.cc/150?u=1',
++        authorIsVerified: true,
++        content: 'Just launched my new photography portfolio! Check it out and let me know what you think 📸✨ #photography #creative #portfolio',
++        mediaUrls: ['https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800'],
++        mediaType: 'image',
++        likesCount: 234,
++        commentsCount: 2,
++        sharesCount: 12,
++        isLiked: false,
++        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
++        hashtags: ['photography', 'creative', 'portfolio'],
++      ),
++      Post(
++        id: '2',
++        authorId: 'user2',
++        authorName: 'Tech Insider',
++        authorUsername: 'techinsider',
++        authorAvatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
++        authorIsVerified: true,
++        content: 'AI is transforming the way we work. Here are 5 tools every developer should know about in 2024 🤖💻',
++        likesCount: 892,
++        commentsCount: 0,
++        sharesCount: 89,
++        isLiked: true,
++        createdAt: DateTime.now().subtract(const Duration(hours: 5)),
++        hashtags: ['AI', 'technology', 'developers'],
++      ),
++      Post(
++        id: '3',
++        authorId: 'currentUser', // Matches MockData.currentUser.id
++        authorName: 'John Doe',
++        authorUsername: 'johndoe',
++        authorAvatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
++        content: 'Morning coffee and productivity ☕ What\'s your morning routine?',
++        mediaUrls: ['https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800'],
++        mediaType: 'image',
++        likesCount: 156,
++        commentsCount: 0,
++        sharesCount: 5,
++        createdAt: DateTime.now().subtract(const Duration(hours: 8)),
++        location: 'Cairo, Egypt',
++      ),
++    ]);
++
++    _comments['1'] = [
++      Comment(
++        id: 'c1',
++        postId: '1',
++        authorId: 'user5',
++        authorName: 'Mike Chen',
++        authorUsername: 'mikec',
++        authorAvatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
++        content: 'This is amazing! Love the composition 👏',
++        likesCount: 12,
++        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
++      ),
++       Comment(
++        id: 'c2',
++        postId: '1',
++        authorId: 'user6',
++        authorName: 'Emily Davis',
++        authorUsername: 'emilyd',
++        content: 'Where was this taken? It\'s beautiful!',
++        likesCount: 5,
++        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
++      ),
++    ];
++  }
++
++  Future<void> _delay() async {
++    await Future.delayed(Duration(milliseconds: 300 + Random().nextInt(500)));
++  }
++
++  @override
++  Future<List<Post>> getFeed({int page = 1, int limit = 20}) async {
++    await _delay();
++    // Simple pagination
++    final start = (page - 1) * limit;
++    if (start >= _posts.length) return [];
++    final end = min(start + limit, _posts.length);
++    return _posts.sublist(start, end);
++  }
++
++  @override
++  Future<List<Post>> getDiscoverFeed({int page = 1, int limit = 20}) async {
++    await _delay();
++    // Return same posts randomly shuffled or reversed for variety
++    return [..._posts.reversed];
++  }
++
++  @override
++  Future<List<Post>> getUserPosts(String userId, {int page = 1, int limit = 20}) async {
++    await _delay();
++    return _posts.where((p) => p.authorId == userId).toList();
++  }
++
++  @override
++  Future<Post> getPostById(String postId) async {
++    await _delay();
++    return _posts.firstWhere((p) => p.id == postId);
++  }
++
++  @override
++  Future<Post> createPost({
++    required String content,
++    List<String>? mediaUrls,
++    String? mediaType,
++    String? location,
++  }) async {
++    await _delay();
++    final newPost = Post(
++      id: DateTime.now().millisecondsSinceEpoch.toString(),
++      authorId: 'currentUser',
++      authorName: 'John Doe',
++      authorUsername: 'johndoe',
++      authorAvatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400', // Mock data match
++      authorIsVerified: true,
++      content: content,
++      mediaUrls: mediaUrls ?? [],
++      mediaType: mediaType,
++      location: location,
++      createdAt: DateTime.now(),
++    );
++    _posts.insert(0, newPost);
++    return newPost;
++  }
++
++  @override
++  Future<Post> updatePost(String postId, {String? content}) async {
++    await _delay();
++    final index = _posts.indexWhere((p) => p.id == postId);
++    if (index == -1) throw Exception('Post not found');
++    
++    final updated = _posts[index].copyWith(content: content, updatedAt: DateTime.now());
++    _posts[index] = updated;
++    return updated;
++  }
++
++  @override
++  Future<void> deletePost(String postId) async {
++    await _delay();
++    _posts.removeWhere((p) => p.id == postId);
++  }
++
++  @override
++  Future<Post> likePost(String postId) async {
++    // Controller handles optimistic update, but repo should also update source of truth
++    await _delay();
++    final index = _posts.indexWhere((p) => p.id == postId);
++    if (index == -1) throw Exception('Post not found');
++    
++    final p = _posts[index];
++    final updated = p.copyWith(isLiked: true, likesCount: p.likesCount + 1);
++    _posts[index] = updated;
++    return updated;
++  }
++
++  @override
++  Future<Post> unlikePost(String postId) async {
++    await _delay();
++    final index = _posts.indexWhere((p) => p.id == postId);
++    if (index == -1) throw Exception('Post not found');
++    
++    final p = _posts[index];
++    final updated = p.copyWith(isLiked: false, likesCount: p.likesCount > 0 ? p.likesCount - 1 : 0);
++    _posts[index] = updated;
++    return updated;
++  }
++
++  @override
++  Future<Post> bookmarkPost(String postId) async {
++    await _delay();
++    final index = _posts.indexWhere((p) => p.id == postId);
++    if (index == -1) throw Exception('Post not found');
++    
++    final updated = _posts[index].copyWith(isBookmarked: true);
++    _posts[index] = updated;
++    return updated;
++  }
++
++  @override
++  Future<Post> unbookmarkPost(String postId) async {
++    await _delay();
++    final index = _posts.indexWhere((p) => p.id == postId);
++    if (index == -1) throw Exception('Post not found');
++    
++    final updated = _posts[index].copyWith(isBookmarked: false);
++    _posts[index] = updated;
++    return updated;
++  }
++
++  @override
++  Future<List<Comment>> getComments(String postId, {int page = 1, int limit = 20}) async {
++    await _delay();
++    return _comments[postId] ?? [];
++  }
++
++  @override
++  Future<Comment> addComment(String postId, String content, {String? parentCommentId}) async {
++    await _delay();
++    final newComment = Comment(
++      id: DateTime.now().millisecondsSinceEpoch.toString(),
++      postId: postId,
++      authorId: 'currentUser',
++      authorName: 'John Doe',
++      authorUsername: 'johndoe',
++      authorAvatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
++      content: content,
++      createdAt: DateTime.now(),
++      parentCommentId: parentCommentId,
++    );
++    
++    if (!_comments.containsKey(postId)) {
++      _comments[postId] = [];
++    }
++    _comments[postId]!.add(newComment);
++    
++    // Update post comment count
++    final index = _posts.indexWhere((p) => p.id == postId);
++    if (index != -1) {
++      _posts[index] = _posts[index].copyWith(commentsCount: _posts[index].commentsCount + 1);
++    }
++    
++    return newComment;
++  }
++
++  @override
++  Future<Comment> updateComment(String postId, String commentId, String content) async {
++    await _delay();
++    final list = _comments[postId];
++    if (list == null) throw Exception('Comments not found');
++    
++    final index = list.indexWhere((c) => c.id == commentId);
++    if (index == -1) throw Exception('Comment not found');
++    
++    final updated = list[index].copyWith(content: content);
++    list[index] = updated;
++    return updated;
++  }
++
++  @override
++  Future<void> deleteComment(String postId, String commentId) async {
++    await _delay();
++    final list = _comments[postId];
++    if (list != null) {
++      list.removeWhere((c) => c.id == commentId);
++    }
++    
++    // Update post comment count
++    final index = _posts.indexWhere((p) => p.id == postId);
++    if (index != -1) {
++      _posts[index] = _posts[index].copyWith(
++        commentsCount: max(0, _posts[index].commentsCount - 1)
++      );
++    }
++  }
++
++  @override
++  Future<Comment> likeComment(String commentId) async {
++    // Simplifying: search in all posts' comments
++    await _delay();
++     for (var key in _comments.keys) {
++      final list = _comments[key]!;
++      final index = list.indexWhere((c) => c.id == commentId);
++      if (index != -1) {
++        final c = list[index];
++        final updated = c.copyWith(isLiked: true, likesCount: c.likesCount + 1);
++        list[index] = updated;
++        return updated;
++      }
++    }
++    throw Exception('Comment not found');
++  }
++
++  @override
++  Future<Comment> unlikeComment(String commentId) async {
++    await _delay();
++    for (var key in _comments.keys) {
++      final list = _comments[key]!;
++      final index = list.indexWhere((c) => c.id == commentId);
++      if (index != -1) {
++        final c = list[index];
++        final updated = c.copyWith(isLiked: false, likesCount: max(0, c.likesCount - 1));
++        list[index] = updated;
++        return updated;
++      }
++    }
++    throw Exception('Comment not found');
++  }
++
++  @override
++  Future<void> sharePost(String postId) async {
++     await _delay();
++     final index = _posts.indexWhere((p) => p.id == postId);
++     if (index != -1) {
++       _posts[index] = _posts[index].copyWith(sharesCount: _posts[index].sharesCount + 1);
++     }
++  }
++
++  @override
++  Future<List<Post>> searchPosts(String query, {int page = 1, int limit = 20}) async {
++    await _delay();
++    final q = query.toLowerCase();
++    return _posts.where((p) => 
++      (p.content?.toLowerCase().contains(q) ?? false) ||
++      p.hashtags.any((h) => h.toLowerCase().contains(q))
++    ).toList();
++  }
++
++  @override
++  Future<List<Post>> getPostsByHashtag(String hashtag, {int page = 1, int limit = 20}) async {
++    await _delay();
++    return _posts.where((p) => p.hashtags.contains(hashtag)).toList();
++  }
++}

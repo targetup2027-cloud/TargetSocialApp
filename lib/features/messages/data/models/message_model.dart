@@ -107,6 +107,8 @@ class MessageModel extends Message {
     super.replyToMessage,
     super.reactions,
     super.isDeleted,
+    super.isForwarded,
+    super.forwardedFromMessageId,
   });
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
@@ -139,6 +141,8 @@ class MessageModel extends Message {
           ?.map((r) => MessageReactionModel.fromJson(r))
           .toList() ?? [],
       isDeleted: json['isDeleted'] as bool? ?? false,
+      isForwarded: json['isForwarded'] as bool? ?? false,
+      forwardedFromMessageId: json['forwardedFromMessageId'] as String?,
     );
   }
 
@@ -159,6 +163,8 @@ class MessageModel extends Message {
       'replyToMessage': replyToMessage != null ? (replyToMessage as MessageModel).toJson() : null,
       'reactions': reactions.map((r) => (r as MessageReactionModel).toJson()).toList(),
       'isDeleted': isDeleted,
+      'isForwarded': isForwarded,
+      'forwardedFromMessageId': forwardedFromMessageId,
     };
   }
 }

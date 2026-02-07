@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/motion/motion_system.dart';
+import '../core/navigation/navigation_transitions.dart';
 import '../features/auth/presentation/authed_landing_screen.dart';
 import '../features/auth/presentation/login_screen.dart';
 import '../features/auth/presentation/signup_screen.dart';
@@ -29,6 +30,15 @@ import '../features/business/presentation/business_store_profile_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/profile/presentation/trust_info_screen.dart';
 import '../features/auth/application/auth_guard.dart';
+import '../features/social/presentation/create_post_screen.dart';
+import '../features/social/domain/entities/post.dart';
+import '../features/profile/presentation/edit_profile_screen.dart';
+import '../features/business/presentation/create_business_screen.dart';
+import '../features/business/presentation/business_plans_screen.dart';
+import '../features/business/presentation/edit_business_screen.dart';
+import '../features/business/domain/entities/business.dart';
+import '../features/profile/presentation/visitor_profile_screen.dart';
+import '../features/notifications/presentation/notifications_screen.dart';
 
 const _publicRoutes = <String>{
   '/',
@@ -46,28 +56,51 @@ CustomTransitionPage<T> _buildMotionPage<T>({
   required LocalKey key,
   required Widget child,
 }) {
-  return CustomTransitionPage<T>(
+  return NavigationTransitions.fadeSlideUp(
     key: key,
     child: child,
-    transitionDuration: MotionTokens.pageTransition,
-    reverseTransitionDuration: MotionTokens.pageTransition,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final curvedAnimation = CurvedAnimation(
-        parent: animation,
-        curve: MotionTokens.transition,
-      );
+    slideOffset: 0.02,
+  );
+}
 
-      return FadeTransition(
-        opacity: curvedAnimation,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0.0, 0.03),
-            end: Offset.zero,
-          ).animate(curvedAnimation),
-          child: child,
-        ),
-      );
-    },
+CustomTransitionPage<T> _buildSharedAxisPage<T>({
+  required LocalKey key,
+  required Widget child,
+}) {
+  return NavigationTransitions.sharedAxis(
+    key: key,
+    child: child,
+    direction: SharedAxisDirection.horizontal,
+  );
+}
+
+CustomTransitionPage<T> _buildFadeThroughPage<T>({
+  required LocalKey key,
+  required Widget child,
+}) {
+  return NavigationTransitions.fadeThrough(
+    key: key,
+    child: child,
+  );
+}
+
+CustomTransitionPage<T> _buildContainerTransformPage<T>({
+  required LocalKey key,
+  required Widget child,
+}) {
+  return NavigationTransitions.containerTransform(
+    key: key,
+    child: child,
+  );
+}
+
+CustomTransitionPage<T> _buildSlideFromBottomPage<T>({
+  required LocalKey key,
+  required Widget child,
+}) {
+  return NavigationTransitions.slideFromBottom(
+    key: key,
+    child: child,
   );
 }
 
@@ -207,6 +240,8 @@ final routerProvider = Provider<GoRouter>((ref) {
               planLimit: data['planLimit'],
               planFeatures: data['planFeatures'],
               agentName: data['agentName'],
+              successButtonText: data['successButtonText'],
+              successRoute: data['successRoute'],
             ),
           );
         },
@@ -268,6 +303,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        pageBuilder: (context, state) => _buildMotionPage(
+          key: state.pageKey,
+          child: const NotificationsScreen(),
+        ),
+      ),
+      GoRoute(
         path: '/settings',
         name: 'settings',
         pageBuilder: (context, state) => _buildMotionPage(
@@ -315,6 +358,67 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _buildMotionPage(
           key: state.pageKey,
           child: const TrustInfoScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/create-post',
+        name: 'create-post',
+        pageBuilder: (context, state) => _buildMotionPage(
+          key: state.pageKey,
+          child: const CreatePostScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/edit-post',
+        name: 'edit-post',
+        pageBuilder: (context, state) => _buildMotionPage(
+          key: state.pageKey,
+          child: CreatePostScreen(editPost: state.extra as Post?),
+        ),
+      ),
+      GoRoute(
+        path: '/edit-profile',
+        name: 'edit-profile',
+        pageBuilder: (context, state) => _buildMotionPage(
+          key: state.pageKey,
+          child: const EditProfileScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/create-business',
+        name: 'create-business',
+        pageBuilder: (context, state) => _buildMotionPage(
+          key: state.pageKey,
+          child: const CreateBusinessScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/business-plans',
+        name: 'business-plans',
+        pageBuilder: (context, state) => _buildMotionPage(
+          key: state.pageKey,
+          child: const BusinessPlansScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/edit-business',
+        name: 'edit-business',
+        pageBuilder: (context, state) {
+          final business = state.extra as Business;
+          return _buildMotionPage(
+            key: state.pageKey,
+            child: EditBusinessScreen(business: business),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/user/:userId',
+        name: 'visitor-profile',
+        pageBuilder: (context, state) => _buildMotionPage(
+          key: state.pageKey,
+          child: VisitorProfileScreen(
+            userId: state.pathParameters['userId'] ?? '',
+          ),
         ),
       ),
     ],

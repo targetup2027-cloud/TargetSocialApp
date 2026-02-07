@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:ui';
+import '../../app/theme/theme_extensions.dart';
 
 class UAxisSidebar extends StatefulWidget {
   final String activeItem;
@@ -16,8 +17,8 @@ class UAxisSidebar extends StatefulWidget {
   State<UAxisSidebar> createState() => _UAxisSidebarState();
 }
 
-class _UAxisSidebarState extends State<UAxisSidebar> with TickerProviderStateMixin {
-  late List<AnimationController> _itemControllers;
+class _UAxisSidebarState extends State<UAxisSidebar> with SingleTickerProviderStateMixin {
+  late AnimationController _entranceController;
   final List<Map<String, dynamic>> menuItems = [
     {'id': 'Home', 'icon': Icons.home_outlined, 'label': 'Home', 'route': '/app'},
     {'id': 'Discover', 'icon': Icons.explore_outlined, 'label': 'Discover', 'route': '/discover'},
@@ -34,52 +35,43 @@ class _UAxisSidebarState extends State<UAxisSidebar> with TickerProviderStateMix
   @override
   void initState() {
     super.initState();
-    _itemControllers = List.generate(
-      menuItems.length,
-      (index) => AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 400),
-      ),
-    );
-    _playEntranceAnimation();
-  }
-
-  void _playEntranceAnimation() async {
-    for (int i = 0; i < _itemControllers.length; i++) {
-      await Future.delayed(const Duration(milliseconds: 40));
-      if (mounted) {
-        _itemControllers[i].forward();
-      }
-    }
+    // Single controller for all items - much more efficient
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    )..forward();
   }
 
   @override
   void dispose() {
-    for (var controller in _itemControllers) {
-      controller.dispose();
-    }
+    _entranceController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDarkMode;
+    
     return ClipRRect(
       borderRadius: const BorderRadius.only(
         topRight: Radius.circular(30),
         bottomRight: Radius.circular(30),
       ),
+      // Reduced blur sigma from 20 to 8 for better performance
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Container(
           width: 260,
           decoration: BoxDecoration(
-            color: const Color(0xFF0B0B0E).withValues(alpha: 0.85),
+            color: isDark 
+                ? const Color(0xFF0B0B0E).withValues(alpha: 0.92) 
+                : const Color(0xFFFAFAFA).withValues(alpha: 0.97),
             borderRadius: const BorderRadius.only(
               topRight: Radius.circular(30),
               bottomRight: Radius.circular(30),
             ),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.1),
+              color: context.dividerColor,
               width: 1,
             ),
           ),
@@ -91,9 +83,14 @@ class _UAxisSidebarState extends State<UAxisSidebar> with TickerProviderStateMix
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'U-ΛXIS',
-                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+                        style: TextStyle(
+                          fontSize: 22, 
+                          fontWeight: FontWeight.bold, 
+                          letterSpacing: 1.2,
+                          color: context.onSurface,
+                        ),
                       ),
                       const SizedBox(height: 6),
                       Row(
@@ -102,7 +99,7 @@ class _UAxisSidebarState extends State<UAxisSidebar> with TickerProviderStateMix
                           const SizedBox(width: 8),
                           Text(
                             'Digital OS v2.0',
-                            style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                            style: TextStyle(fontSize: 11, color: context.onSurfaceVariant),
                           ),
                         ],
                       ),
@@ -110,43 +107,43 @@ class _UAxisSidebarState extends State<UAxisSidebar> with TickerProviderStateMix
                   ),
                 ),
                 Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    itemCount: menuItems.length,
-                    itemBuilder: (context, index) {
-                      final item = menuItems[index];
-                      return AnimatedBuilder(
-                        animation: _itemControllers[index],
-                        builder: (context, child) {
-                          final animation = CurvedAnimation(
-                            parent: _itemControllers[index],
-                            curve: Curves.easeOutBack,
+                  child: AnimatedBuilder(
+                    animation: _entranceController,
+                    builder: (context, child) {
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        itemCount: menuItems.length,
+                        itemBuilder: (context, index) {
+                          final item = menuItems[index];
+                          // Staggered animation using single controller
+                          final itemProgress = Curves.easeOutBack.transform(
+                            ((_entranceController.value - (index * 0.05)).clamp(0.0, 1.0) / 0.5).clamp(0.0, 1.0),
                           );
+                          
                           return Transform.translate(
-                            offset: Offset(-30 * (1 - animation.value), 0),
+                            offset: Offset(-30 * (1 - itemProgress), 0),
                             child: Opacity(
-                              opacity: animation.value.clamp(0.0, 1.0),
-                              child: child,
+                              opacity: itemProgress.clamp(0.0, 1.0),
+                              child: _SidebarItem(
+                                icon: item['icon'],
+                                label: item['label'],
+                                isActive: widget.activeItem == item['id'],
+                                badgeCount: item['badge'] ?? 0,
+                                index: index,
+                                onTap: () {
+                                  widget.onItemSelected(item['id']);
+                                  if (item['route'] != null) {
+                                    if (item['route'] == '/app') {
+                                      context.go('/app');
+                                    } else {
+                                      context.push(item['route']);
+                                    }
+                                  }
+                                },
+                              ),
                             ),
                           );
                         },
-                        child: _SidebarItem(
-                          icon: item['icon'],
-                          label: item['label'],
-                          isActive: widget.activeItem == item['id'],
-                          badgeCount: item['badge'] ?? 0,
-                          index: index,
-                          onTap: () {
-                            widget.onItemSelected(item['id']);
-                            if (item['route'] != null) {
-                              if (item['route'] == '/app') {
-                                context.go('/app');
-                              } else {
-                                context.push(item['route']);
-                              }
-                            }
-                          },
-                        ),
                       );
                     },
                   ),
@@ -155,7 +152,7 @@ class _UAxisSidebarState extends State<UAxisSidebar> with TickerProviderStateMix
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
-                    border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+                    border: Border(top: BorderSide(color: context.dividerColor)),
                   ),
                   child: Row(
                     children: [
@@ -185,12 +182,12 @@ class _UAxisSidebarState extends State<UAxisSidebar> with TickerProviderStateMix
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text(
+                            Text(
                               'User Account',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                                color: context.onSurface,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -199,7 +196,7 @@ class _UAxisSidebarState extends State<UAxisSidebar> with TickerProviderStateMix
                               'Pro Plan',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey[500],
+                                color: context.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -207,7 +204,7 @@ class _UAxisSidebarState extends State<UAxisSidebar> with TickerProviderStateMix
                       ),
                       Icon(
                         Icons.chevron_right,
-                        color: Colors.grey[600],
+                        color: context.onSurfaceVariant,
                         size: 20,
                       ),
                     ],
@@ -247,6 +244,7 @@ class _SidebarItemState extends State<_SidebarItem> with SingleTickerProviderSta
   late AnimationController _rippleController;
   late Animation<double> _rippleAnimation;
   bool _isPressed = false;
+  bool _isHovered = false;
 
   @override
   void initState() {
@@ -283,143 +281,170 @@ class _SidebarItemState extends State<_SidebarItem> with SingleTickerProviderSta
   @override
   Widget build(BuildContext context) {
     const activeColor = Color(0xFF7F56D9);
+    final isDark = context.isDarkMode;
 
-    return Stack(
-      alignment: Alignment.centerLeft,
-      children: [
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-          height: widget.isActive ? 32 : 0,
-          width: 4,
-          decoration: BoxDecoration(
-            color: activeColor,
-            borderRadius: const BorderRadius.horizontal(right: Radius.circular(4)),
-            boxShadow: widget.isActive
-                ? [
-                    BoxShadow(
-                      color: activeColor.withValues(alpha: 0.6),
-                      blurRadius: 15,
-                      spreadRadius: 1,
-                    )
-                  ]
-                : [],
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Stack(
+        alignment: Alignment.centerLeft,
+        children: [
+          // Active Indicator (pill shape on the left)
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.easeOutBack,
+            alignment: Alignment.centerLeft,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              height: widget.isActive ? 24 : 0,
+              width: 4,
+              margin: const EdgeInsets.only(left: 0),
+              decoration: BoxDecoration(
+                color: activeColor,
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(4),
+                  bottomRight: Radius.circular(4),
+                ),
+                boxShadow: widget.isActive
+                    ? [
+                        BoxShadow(
+                          color: activeColor.withValues(alpha: 0.5),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                        )
+                      ]
+                    : [],
+              ),
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 8),
-          child: GestureDetector(
-            onTapDown: _handleTapDown,
-            onTapUp: _handleTapUp,
-            onTapCancel: _handleTapCancel,
-            onTap: widget.onTap,
-            child: AnimatedBuilder(
-              animation: _rippleAnimation,
-              builder: (context, child) {
-                return AnimatedScale(
-                  scale: _isPressed ? 0.97 : 1.0,
-                  duration: const Duration(milliseconds: 100),
-                  child: Container(
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Stack(
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
-                          curve: Curves.easeInOut,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: widget.isActive
-                                ? activeColor.withValues(alpha: 0.15)
-                                : (_isPressed ? Colors.white.withValues(alpha: 0.03) : Colors.transparent),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
+          
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 10),
+            child: GestureDetector(
+              onTapDown: _handleTapDown,
+              onTapUp: _handleTapUp,
+              onTapCancel: _handleTapCancel,
+              onTap: widget.onTap,
+              child: AnimatedBuilder(
+                animation: _rippleAnimation,
+                builder: (context, child) {
+                  return AnimatedScale(
+                    scale: _isPressed ? 0.98 : (_isHovered ? 1.02 : 1.0),
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOutCubic,
+                    child: Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Stack(
+                        children: [
+                          AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeOutCubic,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
                               color: widget.isActive
-                                  ? activeColor.withValues(alpha: 0.3)
-                                  : Colors.transparent,
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Transform.scale(
-                                scale: _isPressed ? 0.9 : 1.0,
-                                child: Icon(
-                                  widget.icon,
-                                  size: 22,
-                                  color: widget.isActive ? Colors.white : Colors.grey[500],
-                                ),
+                                  ? activeColor.withValues(alpha: 0.12)
+                                  : (_isHovered
+                                      ? activeColor.withValues(alpha: 0.05)
+                                      : Colors.transparent),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: widget.isActive
+                                    ? activeColor.withValues(alpha: 0.1) // Subtle border
+                                    : Colors.transparent,
+                                width: 1,
                               ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Text(
-                                  widget.label,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: widget.isActive ? FontWeight.w600 : FontWeight.w500,
-                                    color: widget.isActive ? Colors.white : Colors.grey[500],
+                            ),
+                            child: Row(
+                              children: [
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  curve: Curves.easeOut,
+                                  child: Icon(
+                                    widget.icon,
+                                    size: 22,
+                                    color: widget.isActive 
+                                        ? activeColor 
+                                        : (_isHovered ? activeColor.withValues(alpha: 0.8) : context.onSurfaceVariant),
                                   ),
                                 ),
-                              ),
-                              if (widget.badgeCount > 0)
-                                TweenAnimationBuilder<double>(
-                                  tween: Tween(begin: 0.8, end: 1.0),
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.elasticOut,
-                                  builder: (context, value, child) {
-                                    return Transform.scale(
-                                      scale: value,
-                                      child: child,
-                                    );
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: activeColor,
-                                      borderRadius: BorderRadius.circular(10),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: activeColor.withValues(alpha: 0.4),
-                                          blurRadius: 8,
-                                          spreadRadius: 0,
-                                        ),
-                                      ],
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: AnimatedDefaultTextStyle(
+                                    duration: const Duration(milliseconds: 200),
+                                    curve: Curves.easeOut,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: widget.isActive ? FontWeight.w600 : FontWeight.w500,
+                                      color: widget.isActive 
+                                          ? context.onSurface 
+                                          : (_isHovered ? context.onSurface : context.onSurfaceVariant),
+                                      fontFamily: 'Inter', 
                                     ),
-                                    child: Text(
-                                      widget.badgeCount.toString(),
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
+                                    child: Text(widget.label),
+                                  ),
+                                ),
+                                if (widget.badgeCount > 0)
+                                  TweenAnimationBuilder<double>(
+                                    tween: Tween(begin: 0.8, end: 1.0),
+                                    duration: const Duration(milliseconds: 400),
+                                    curve: Curves.elasticOut,
+                                    builder: (context, value, child) {
+                                      return Transform.scale(
+                                        scale: value,
+                                        child: child,
+                                      );
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: activeColor,
+                                        borderRadius: BorderRadius.circular(10),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: activeColor.withValues(alpha: 0.3),
+                                            blurRadius: 6,
+                                            spreadRadius: 0,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Text(
+                                        widget.badgeCount.toString(),
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        if (_rippleController.isAnimating || _rippleController.value > 0)
-                          Positioned.fill(
-                            child: IgnorePointer(
-                              child: CustomPaint(
-                                painter: _RipplePainter(
-                                  progress: _rippleAnimation.value,
-                                  color: activeColor.withValues(alpha: 0.15),
+                          if (_rippleController.isAnimating || _rippleController.value > 0)
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: CustomPaint(
+                                  painter: _RipplePainter(
+                                    progress: _rippleAnimation.value,
+                                    color: activeColor.withValues(alpha: 0.1),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -434,13 +459,13 @@ class _RipplePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (progress <= 0) return;
 
-    final center = Offset(size.width * 0.1, size.height / 2);
-    final maxRadius = size.width * 1.2;
+    final center = Offset(size.width / 2, size.height / 2); // Center ripple
+    final maxRadius = size.width * 0.8;
     final currentRadius = maxRadius * progress;
     final opacity = (1 - progress).clamp(0.0, 1.0);
 
     final paint = Paint()
-      ..color = color.withValues(alpha: opacity * 0.3)
+      ..color = color.withValues(alpha: opacity * 0.4)
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(center, currentRadius, paint);
@@ -484,7 +509,7 @@ class UAxisDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      backgroundColor: const Color(0xFF0B0B0E),
+      backgroundColor: context.isDarkMode ? const Color(0xFF0B0B0E) : const Color(0xFFFAFAFA),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topRight: Radius.circular(30),

@@ -133,8 +133,8 @@ class AIChatController extends StateNotifier<AsyncValue<AIChat>> {
           updatedAt: DateTime.now(),
         ));
       }
-    } catch (e) {
-      
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     } finally {
       _isGenerating = false;
     }
@@ -268,8 +268,8 @@ class AIChatListController extends StateNotifier<AsyncValue<List<AIChat>>> {
       await _repository.deleteChat(chatId);
       final currentChats = state.valueOrNull ?? [];
       state = AsyncValue.data(currentChats.where((c) => c.id != chatId).toList());
-    } catch (e) {
-      
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     }
   }
 }
@@ -312,8 +312,8 @@ class SubscriptionController extends StateNotifier<AsyncValue<List<UserSubscript
       await _repository.cancelSubscription(subscriptionId);
       final currentSubs = state.valueOrNull ?? [];
       state = AsyncValue.data(currentSubs.where((s) => s.id != subscriptionId).toList());
-    } catch (e) {
-      
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     }
   }
 }

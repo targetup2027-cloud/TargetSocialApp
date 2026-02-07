@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 import '../../domain/entities/business.dart';
 import '../../domain/repositories/business_repository.dart';
 
@@ -6,11 +8,26 @@ class BusinessRepositoryImpl implements BusinessRepository {
 
   BusinessRepositoryImpl({this.useMockData = true});
 
+  // In-memory persistent storage for mock data
+  static final List<Business> _mockBusinessesList = _initMockBusinesses();
+
+  @override
+  Future<List<Business>> getMyBusinesses() async {
+    if (useMockData) {
+      await Future.delayed(const Duration(milliseconds: 300));
+      return _mockBusinessesList.where((b) => b.ownerId == 'currentUser').toList();
+    }
+    throw UnimplementedError();
+  }
+
   @override
   Future<Business> getMyBusiness() async {
     if (useMockData) {
       await Future.delayed(const Duration(milliseconds: 300));
-      return _getMockMyBusiness();
+      return _mockBusinessesList.firstWhere(
+        (b) => b.ownerId == 'currentUser',
+        orElse: () => _getMockMyBusiness(),
+      );
     }
     throw UnimplementedError();
   }
@@ -19,7 +36,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
   Future<Business?> getBusinessById(String businessId) async {
     if (useMockData) {
       await Future.delayed(const Duration(milliseconds: 200));
-      return _getMockBusinesses().firstWhere(
+      return _mockBusinessesList.firstWhere(
         (b) => b.id == businessId,
         orElse: () => _getMockMyBusiness(),
       );
@@ -39,7 +56,8 @@ class BusinessRepositoryImpl implements BusinessRepository {
   }) async {
     if (useMockData) {
       await Future.delayed(const Duration(milliseconds: 300));
-      var businesses = _getMockBusinesses();
+      await Future.delayed(const Duration(milliseconds: 300));
+      var businesses = [..._mockBusinessesList];
       
       if (category != null) {
         businesses = businesses.where((b) => b.category == category).toList();
@@ -63,17 +81,44 @@ class BusinessRepositoryImpl implements BusinessRepository {
     String? description,
     required BusinessCategory category,
     List<String>? subcategories,
+    String? email,
+    String? phone,
+    String? website,
+    String? address,
+    String? commercialRegistration,
+    String? taxNumber,
+    int? foundingYear,
+    Uint8List? logoBytes,
+    Uint8List? coverBytes,
+    List<XFile>? imageFiles,
+    XFile? verticalVideo,
+    XFile? horizontalVideo,
   }) async {
     if (useMockData) {
-      return Business(
+      await Future.delayed(const Duration(seconds: 1));
+      final newBusiness = Business(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         ownerId: 'currentUser',
         name: name,
         description: description,
         category: category,
         subcategories: subcategories ?? [],
+        email: email,
+        phone: phone,
+        website: website,
+        address: address != null ? BusinessAddress(street: address) : null,
+        commercialRegistration: commercialRegistration,
+        taxNumber: taxNumber,
+        foundingYear: foundingYear,
         createdAt: DateTime.now(),
+        logoUrl: logoBytes != null ? 'memory_logo_placeholder' : null,
+        coverImageUrl: coverBytes != null ? 'memory_cover_placeholder' : null,
+        videoUrl: verticalVideo?.path,
+        horizontalVideoUrl: horizontalVideo?.path,
+        galleryImageUrls: imageFiles?.map((e) => e.path).toList() ?? [],
       );
+      _mockBusinessesList.add(newBusiness);
+      return newBusiness;
     }
     throw UnimplementedError();
   }
@@ -81,19 +126,30 @@ class BusinessRepositoryImpl implements BusinessRepository {
   @override
   Future<Business> updateBusiness(String businessId, {
     String? name,
-    String? description,
-    String? website,
-    String? email,
-    String? phone,
-    BusinessAddress? address,
+    Nullable<String>? description,
+    Nullable<String>? website,
+    Nullable<String>? email,
+    Nullable<String>? phone,
+    Nullable<BusinessAddress>? address,
     BusinessCategory? category,
     List<String>? subcategories,
-    BusinessHours? hours,
-    Map<String, String>? socialLinks,
+    Nullable<BusinessHours>? hours,
+    Nullable<Map<String, String>>? socialLinks,
+    Nullable<String>? commercialRegistration,
+    Nullable<String>? taxNumber,
+    Nullable<int>? foundingYear,
+    Uint8List? logoBytes,
+    Uint8List? coverBytes,
+    List<XFile>? imageFiles,
+    XFile? verticalVideo,
+    XFile? horizontalVideo,
   }) async {
     if (useMockData) {
-      final business = await getBusinessById(businessId);
-      return business!.copyWith(
+      final index = _mockBusinessesList.indexWhere((b) => b.id == businessId);
+      if (index == -1) throw Exception('Business not found');
+      
+      final business = _mockBusinessesList[index];
+      final updatedBusiness = business.copyWith(
         name: name,
         description: description,
         website: website,
@@ -104,7 +160,27 @@ class BusinessRepositoryImpl implements BusinessRepository {
         subcategories: subcategories,
         hours: hours,
         socialLinks: socialLinks,
+        commercialRegistration: commercialRegistration,
+        taxNumber: taxNumber,
+        foundingYear: foundingYear,
+        logoUrl: logoBytes != null 
+          ? Nullable('memory_logo_${DateTime.now().millisecondsSinceEpoch}') 
+          : null,
+        coverImageUrl: coverBytes != null 
+          ? Nullable('memory_cover_${DateTime.now().millisecondsSinceEpoch}') 
+          : null,
+        videoUrl: verticalVideo != null 
+          ? Nullable(verticalVideo.path) 
+          : null,
+        horizontalVideoUrl: horizontalVideo != null 
+          ? Nullable(horizontalVideo.path) 
+          : null,
+        galleryImageUrls: imageFiles != null && imageFiles.isNotEmpty 
+          ? imageFiles.map((e) => e.path).toList() 
+          : null,
       );
+      _mockBusinessesList[index] = updatedBusiness;
+      return updatedBusiness;
     }
     throw UnimplementedError();
   }
@@ -152,7 +228,7 @@ class BusinessRepositoryImpl implements BusinessRepository {
   @override
   Future<List<Business>> getFollowedBusinesses({int page = 1, int limit = 20}) async {
     if (useMockData) {
-      return _getMockBusinesses().take(3).toList();
+      return _mockBusinessesList.take(3).toList();
     }
     throw UnimplementedError();
   }
@@ -268,8 +344,41 @@ class BusinessRepositoryImpl implements BusinessRepository {
     );
   }
 
-  List<Business> _getMockBusinesses() {
+  static List<Business> _initMockBusinesses() {
     return [
+      Business(
+        id: 'myBusiness',
+        ownerId: 'currentUser',
+        name: 'My Tech Store',
+        description: 'Premium electronics and gadgets for tech enthusiasts. We offer the latest technology products at competitive prices.',
+        logoUrl: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=200',
+        coverImageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800',
+        website: 'https://mytechstore.com',
+        email: 'contact@mytechstore.com',
+        phone: '+1 (555) 123-4567',
+        address: const BusinessAddress(
+          street: '123 Tech Street',
+          city: 'San Francisco',
+          state: 'CA',
+          country: 'USA',
+          postalCode: '94105',
+          latitude: 37.7749,
+          longitude: -122.4194,
+        ),
+        category: BusinessCategory.technology,
+        subcategories: ['Electronics', 'Gadgets', 'Accessories'],
+        isVerified: true,
+        rating: 4.8,
+        reviewsCount: 156,
+        followersCount: 2340,
+        productsCount: 45,
+        createdAt: DateTime(2023, 1, 15),
+        socialLinks: {
+          'twitter': 'mytechstore',
+          'instagram': 'mytechstore',
+          'facebook': 'mytechstore',
+        },
+      ),
       Business(
         id: 'biz1',
         ownerId: 'user1',
@@ -329,6 +438,8 @@ class BusinessRepositoryImpl implements BusinessRepository {
       ),
     ];
   }
+
+
 
   List<BusinessReview> _getMockReviews(String businessId) {
     return [

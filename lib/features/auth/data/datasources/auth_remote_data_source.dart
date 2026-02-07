@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/network_client.dart';
 import '../../domain/user.dart';
+import '../session_store.dart';
+import '../auth_interceptor.dart';
+import '../../application/auth_guard.dart';
 
 class TokenPair {
   final String accessToken;
@@ -12,23 +15,39 @@ class TokenPair {
   });
 }
 
+class AuthResponse {
+  final User user;
+  final TokenPair tokens;
+
+  const AuthResponse({
+    required this.user,
+    required this.tokens,
+  });
+}
+
 abstract interface class AuthRemoteDataSource {
-  Future<User> signUp({
+  Future<AuthResponse> signUp({
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
-    required String displayName,
+    required String confirmPassword,
+    DateTime? dateOfBirth,
   });
 
-  Future<User> login({
+  Future<AuthResponse> login({
     required String email,
     required String password,
   });
 
   Future<User> getUserById(String userId);
 
-  Future<TokenPair> refresh(String refreshToken);
+  Future<TokenPair> refresh({
+    required String accessToken,
+    required String refreshToken,
+  });
 
-  Future<User> signInWithGoogle(String idToken);
+  Future<AuthResponse> signInWithGoogle(String idToken);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -37,41 +56,48 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl(this._client);
 
   @override
-  Future<User> login({required String email, required String password}) async {
+  Future<AuthResponse> login({required String email, required String password}) async {
     final response = await _client.post('/api/Auth/login', data: {
       'email': email,
       'password': password,
     });
 
     final data = response['data'];
-    return User(
+    final user = User(
       id: data['userId'].toString(),
       email: data['email'] ?? email,
-      displayName: data['email'] ?? email,
+      firstName: data['firstName'] ?? '',
+      lastName: data['lastName'] ?? '',
       createdAtMs: DateTime.now().millisecondsSinceEpoch,
     );
+
+    final tokens = TokenPair(
+      accessToken: data['accessToken'] ?? '',
+      refreshToken: data['refreshToken'],
+    );
+
+    return AuthResponse(user: user, tokens: tokens);
   }
 
   @override
-  Future<User> signUp({
+  Future<AuthResponse> signUp({
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
-    required String displayName,
+    required String confirmPassword,
+    DateTime? dateOfBirth,
   }) async {
-    final response = await _client.post('/api/Auth/register', data: {
+    await _client.post('/api/Auth/register', data: {
+      'firstName': firstName,
+      'lastName': lastName,
       'email': email,
       'password': password,
-      'displayName': displayName,
-      'username': displayName,
+      'confirmPassword': confirmPassword,
+      if (dateOfBirth != null) 'dateOfBirth': dateOfBirth.toIso8601String(),
     });
 
-    final data = response['data'];
-    return User(
-      id: data['userId'].toString(),
-      email: data['email'] ?? email,
-      displayName: displayName,
-      createdAtMs: DateTime.now().millisecondsSinceEpoch,
-    );
+    return login(email: email, password: password);
   }
 
   @override
@@ -81,14 +107,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     return User(
       id: data['id'].toString(),
       email: data['email'] ?? '',
-      displayName: data['displayName'] ?? data['username'] ?? '',
+      firstName: data['firstName'] ?? '',
+      lastName: data['lastName'] ?? '',
+      profileImageUrl: data['profilePictureUrl'] as String?,
       createdAtMs: DateTime.now().millisecondsSinceEpoch,
     );
   }
 
   @override
-  Future<TokenPair> refresh(String refreshToken) async {
+  Future<TokenPair> refresh({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
     final response = await _client.post('/api/Auth/refresh-token', data: {
+      'token': accessToken,
       'refreshToken': refreshToken,
     });
 
@@ -100,26 +132,49 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
-  Future<User> signInWithGoogle(String idToken) async {
+  Future<AuthResponse> signInWithGoogle(String idToken) async {
     final response = await _client.post('/api/Auth/google', data: {
       'provider': 'Google',
       'providerToken': idToken,
     });
 
     final data = response['data'];
-    return User(
+    final user = User(
       id: data['userId'].toString(),
       email: data['email'] ?? '',
-      displayName: data['email']?.split('@').first ?? '',
+      firstName: data['firstName'] ?? '',
+      lastName: data['lastName'] ?? '',
       createdAtMs: DateTime.now().millisecondsSinceEpoch,
     );
+
+    final tokens = TokenPair(
+      accessToken: data['accessToken'] ?? '',
+      refreshToken: data['refreshToken'],
+    );
+
+    return AuthResponse(user: user, tokens: tokens);
   }
 }
 
-final networkClientProvider = Provider<NetworkClient>((ref) {
+final baseNetworkClientProvider = Provider<NetworkClient>((ref) {
   return DioNetworkClient();
 });
 
 final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
-  return AuthRemoteDataSourceImpl(ref.watch(networkClientProvider));
+  return AuthRemoteDataSourceImpl(ref.watch(baseNetworkClientProvider));
+});
+
+final networkClientProvider = Provider<NetworkClient>((ref) {
+  final sessionStore = ref.watch(sessionStoreProvider);
+  final authRemoteDataSource = ref.watch(authRemoteDataSourceProvider);
+  
+  final authInterceptor = AuthInterceptor(
+    sessionStore: sessionStore,
+    authRemoteDataSource: authRemoteDataSource,
+    onSessionExpired: () {
+      ref.read(authGuardProvider.notifier).setUnauthenticated();
+    },
+  );
+  
+  return DioNetworkClient(authInterceptor: authInterceptor);
 });

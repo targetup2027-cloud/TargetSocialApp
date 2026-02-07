@@ -5,6 +5,7 @@ import '../../../core/widgets/universe_back_button.dart';
 import '../../../core/widgets/uaxis_drawer.dart';
 import '../domain/entities/cart.dart';
 import '../application/cart_controller.dart';
+import '../../../app/theme/theme_extensions.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -35,7 +36,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final cartState = ref.watch(cartControllerProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: context.scaffoldBg,
       drawer: UAxisDrawer(),
       body: Stack(
         children: [
@@ -49,7 +50,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   cartState.when(
                     data: (cart) => _buildOrderSummary(cart),
                     loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (err, _) => Text('Error: $err', style: const TextStyle(color: Colors.white)),
+                    error: (err, _) => Text('Error: $err', style: TextStyle(color: context.onSurface)),
                   ),
                   const SizedBox(height: 32),
                   _buildPaymentMethods(),
@@ -86,10 +87,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Order Summary',
           style: TextStyle(
-            color: Colors.white,
+            color: context.onSurface,
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -99,10 +100,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           padding: const EdgeInsets.all(16),
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: const Color(0xFF141418),
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.08),
+              color: context.dividerColor,
             ),
           ),
           child: Row(
@@ -111,7 +112,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2d2d35),
+                  color: context.onSurface.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   image: DecorationImage(
                     image: NetworkImage(item.product.imageUrl),
@@ -126,8 +127,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   children: [
                     Text(
                       item.product.name,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: context.onSurface,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -136,7 +137,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     Text(
                       'Qty: ${item.quantity}',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: context.onSurfaceVariant,
                         fontSize: 12,
                       ),
                     ),
@@ -145,8 +146,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ),
               Text(
                 '\$${item.total.toStringAsFixed(0)}',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
@@ -155,9 +156,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           ),
         )),
         if (cart.items.isEmpty) 
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text("Your cart is empty", style: TextStyle(color: Colors.white)),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text("Your cart is empty", style: TextStyle(color: context.hintColor)),
           ),
         const SizedBox(height: 16),
         _buildPriceRow('Subtotal', '\$${cart.subtotal.toStringAsFixed(2)}', isNormal: true),
@@ -166,16 +167,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         const SizedBox(height: 16),
         Container(
           height: 1,
-          color: Colors.white.withValues(alpha: 0.1),
+          color: context.dividerColor,
         ),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Total',
               style: TextStyle(
-                color: Colors.white,
+                color: context.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
@@ -203,14 +204,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           Text(
             label,
             style: TextStyle(
-              color: color ?? Colors.white.withValues(alpha: 0.6),
+              color: color ?? context.onSurfaceVariant,
               fontSize: 14,
             ),
           ),
           Text(
             value,
             style: TextStyle(
-              color: color ?? Colors.white,
+              color: color ?? context.onSurface,
               fontSize: 14,
               fontWeight: isNormal ? FontWeight.w400 : FontWeight.w500,
             ),
@@ -224,10 +225,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Payment Method',
           style: TextStyle(
-            color: Colors.white,
+            color: context.onSurface,
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -255,10 +256,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF10B981).withValues(alpha: 0.15) : const Color(0xFF141418),
+          color: isSelected ? const Color(0xFF10B981).withValues(alpha: 0.15) : context.cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF10B981) : Colors.white.withValues(alpha: 0.08),
+            color: isSelected ? const Color(0xFF10B981) : context.dividerColor,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -267,14 +268,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           children: [
             Icon(
               icon,
-              color: isSelected ? const Color(0xFF10B981) : Colors.white.withValues(alpha: 0.6),
+              color: isSelected ? const Color(0xFF10B981) : context.iconColor,
               size: 24,
             ),
             const SizedBox(height: 6),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? const Color(0xFF10B981) : Colors.white.withValues(alpha: 0.6),
+                color: isSelected ? const Color(0xFF10B981) : context.onSurfaceVariant,
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               ),
@@ -340,10 +341,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF141418),
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: context.dividerColor,
         ),
       ),
       child: Column(
@@ -362,10 +363,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'PayPal',
             style: TextStyle(
-              color: Colors.white,
+              color: context.onSurface,
               fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
@@ -375,7 +376,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             'You will be redirected to PayPal to complete your payment securely.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: context.onSurfaceVariant,
               fontSize: 14,
             ),
           ),
@@ -388,10 +389,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF141418),
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: context.dividerColor,
         ),
       ),
       child: Column(
@@ -410,10 +411,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Stripe',
             style: TextStyle(
-              color: Colors.white,
+              color: context.onSurface,
               fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
@@ -423,7 +424,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
             'Fast and secure payment powered by Stripe.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: context.onSurfaceVariant,
               fontSize: 14,
             ),
           ),
@@ -436,10 +437,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF141418),
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: context.dividerColor,
         ),
       ),
       child: Column(
@@ -461,10 +462,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-              const Text(
+              Text(
                 'Bank Transfer',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.onSurface,
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                 ),
@@ -481,7 +482,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           Text(
             'Please use your order number as payment reference.',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: context.hintColor,
               fontSize: 12,
             ),
           ),
@@ -499,14 +500,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.5),
+              color: context.onSurfaceVariant,
               fontSize: 13,
             ),
           ),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.onSurface,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -522,7 +523,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       child: Text(
         label,
         style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.6),
+          color: context.onSurfaceVariant,
           fontSize: 13,
         ),
       ),
@@ -536,19 +537,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF141418),
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: context.dividerColor,
         ),
       ),
       child: TextField(
         controller: controller,
-        style: const TextStyle(color: Colors.white, fontSize: 15),
+        style: TextStyle(color: context.onSurface, fontSize: 15),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(
-            color: Colors.white.withValues(alpha: 0.3),
+            color: context.hintColor,
             fontSize: 15,
           ),
           border: InputBorder.none,
@@ -556,7 +557,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           suffixIcon: suffixIcon != null
               ? Icon(
                   suffixIcon,
-                  color: Colors.white.withValues(alpha: 0.3),
+                  color: context.iconColor,
                   size: 20,
                 )
               : null,
@@ -570,14 +571,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       children: [
         Icon(
           Icons.lock_outline,
-          color: Colors.white.withValues(alpha: 0.4),
+          color: context.hintColor,
           size: 16,
         ),
         const SizedBox(width: 8),
         Text(
           'Your payment information is encrypted and secure',
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.4),
+            color: context.hintColor,
             fontSize: 12,
           ),
         ),

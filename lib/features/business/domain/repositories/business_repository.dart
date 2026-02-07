@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+import 'package:image_picker/image_picker.dart';
 import '../entities/business.dart';
 
 abstract class BusinessRepository {
+  Future<List<Business>> getMyBusinesses();
   Future<Business> getMyBusiness();
   
   Future<Business?> getBusinessById(String businessId);
@@ -20,19 +23,39 @@ abstract class BusinessRepository {
     String? description,
     required BusinessCategory category,
     List<String>? subcategories,
+    String? email,
+    String? phone,
+    String? website,
+    String? address,
+    String? commercialRegistration,
+    String? taxNumber,
+    int? foundingYear,
+    Uint8List? logoBytes,
+    Uint8List? coverBytes,
+    List<XFile>? imageFiles,
+    XFile? verticalVideo,
+    XFile? horizontalVideo,
   });
   
   Future<Business> updateBusiness(String businessId, {
     String? name,
-    String? description,
-    String? website,
-    String? email,
-    String? phone,
-    BusinessAddress? address,
+    Nullable<String>? description,
+    Nullable<String>? website,
+    Nullable<String>? email,
+    Nullable<String>? phone,
+    Nullable<BusinessAddress>? address,
     BusinessCategory? category,
     List<String>? subcategories,
-    BusinessHours? hours,
-    Map<String, String>? socialLinks,
+    Nullable<BusinessHours>? hours,
+    Nullable<Map<String, String>>? socialLinks,
+    Nullable<String>? commercialRegistration,
+    Nullable<String>? taxNumber,
+    Nullable<int>? foundingYear,
+    Uint8List? logoBytes,
+    Uint8List? coverBytes,
+    List<XFile>? imageFiles,
+    XFile? verticalVideo,
+    XFile? horizontalVideo,
   });
   
   Future<String> updateBusinessLogo(String businessId, String imagePath);

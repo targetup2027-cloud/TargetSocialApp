@@ -103,6 +103,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'U-Axis'**
   String get appTitle;
+
+  /// No description provided for @comments.
+  ///
+  /// In en, this message translates to:
+  /// **'Comments'**
+  String get comments;
+
+  /// No description provided for @shares.
+  ///
+  /// In en, this message translates to:
+  /// **'Shares'**
+  String get shares;
+
+  /// No description provided for @react.
+  ///
+  /// In en, this message translates to:
+  /// **'React'**
+  String get react;
+
+  /// No description provided for @comment.
+  ///
+  /// In en, this message translates to:
+  /// **'Comment'**
+  String get comment;
+
+  /// No description provided for @share.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share;
+
+  /// No description provided for @like.
+  ///
+  /// In en, this message translates to:
+  /// **'Like'**
+  String get like;
+
+  /// No description provided for @reply.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply'**
+  String get reply;
+
+  /// No description provided for @viewMoreComments.
+  ///
+  /// In en, this message translates to:
+  /// **'View more comments'**
+  String get viewMoreComments;
 }
 
 class _AppLocalizationsDelegate

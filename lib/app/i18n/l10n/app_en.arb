@@ -1,4 +1,12 @@
 {
   "@@locale": "en",
-  "appTitle": "U-Axis"
+  "appTitle": "U-Axis",
+  "comments": "Comments",
+  "shares": "Shares",
+  "react": "React",
+  "comment": "Comment",
+  "share": "Share",
+  "like": "Like",
+  "reply": "Reply",
+  "viewMoreComments": "View more comments"
 }

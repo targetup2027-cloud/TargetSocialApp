@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'dart:math' as math;
 
 import '../../../app/theme/uaxis_theme.dart';
+import '../../../app/theme/theme_extensions.dart';
+import '../../notifications/application/notifications_controller.dart';
+import '../../social/application/current_user_provider.dart';
 
 class AuthedLandingScreen extends ConsumerStatefulWidget {
   const AuthedLandingScreen({super.key});
@@ -114,7 +117,7 @@ class _AuthedLandingScreenState extends ConsumerState<AuthedLandingScreen>
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.black,
+      backgroundColor: context.scaffoldBg,
       drawer: _AppDrawer(),
       body: Stack(
         children: [
@@ -128,6 +131,7 @@ class _AuthedLandingScreenState extends ConsumerState<AuthedLandingScreen>
                     rotation: _orbitController.value * 2 * math.pi * 0.1,
                     orbitRadius: orbitRadius,
                     centerY: centerY,
+                    isDarkMode: context.isDarkMode,
                   ),
                 );
               },
@@ -211,15 +215,15 @@ class _AuthedLandingScreenState extends ConsumerState<AuthedLandingScreen>
                   width: 32,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1A1A1A),
+                    color: context.isDarkMode ? const Color(0xFF1A1A1A) : const Color(0xFFE8E8E8),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: context.dividerColor,
                     ),
                   ),
                   child: Icon(
                     Icons.chevron_right,
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: context.hintColor,
                     size: 20,
                   ),
                 ),
@@ -243,7 +247,7 @@ class _AuthedLandingScreenState extends ConsumerState<AuthedLandingScreen>
                       child: Text(
                         'Tap to explore your universe',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
+                          color: context.hintColor,
                           fontSize: 14,
                         ),
                       ),
@@ -284,7 +288,7 @@ class _AuthedLandingScreenState extends ConsumerState<AuthedLandingScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.15),
+                    color: context.dividerColor,
                     width: 1,
                   ),
                   image: const DecorationImage(
@@ -300,7 +304,7 @@ class _AuthedLandingScreenState extends ConsumerState<AuthedLandingScreen>
             Text(
               'My Profile',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
+                color: context.hintColor,
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
                 letterSpacing: 1,
@@ -365,7 +369,7 @@ class _OrbitPlanet extends StatelessWidget {
           Text(
             section.name,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
+              color: context.subtleIconColor,
               fontSize: 11,
             ),
           ),
@@ -379,11 +383,13 @@ class _OrbitRingsPainter extends CustomPainter {
   final double rotation;
   final double orbitRadius;
   final double centerY;
+  final bool isDarkMode;
 
   _OrbitRingsPainter({
     required this.rotation,
     required this.orbitRadius,
     required this.centerY,
+    required this.isDarkMode,
   });
 
   @override
@@ -393,13 +399,15 @@ class _OrbitRingsPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
-    paint.color = Colors.white.withValues(alpha: 0.06);
+    final ringColor = isDarkMode ? Colors.white : Colors.black;
+
+    paint.color = ringColor.withValues(alpha: 0.06);
     canvas.drawCircle(center, orbitRadius, paint);
 
-    paint.color = Colors.white.withValues(alpha: 0.03);
+    paint.color = ringColor.withValues(alpha: 0.03);
     canvas.drawCircle(center, orbitRadius * 0.7, paint);
 
-    paint.color = Colors.white.withValues(alpha: 0.02);
+    paint.color = ringColor.withValues(alpha: 0.02);
     canvas.drawCircle(center, orbitRadius * 1.3, paint);
   }
 
@@ -407,13 +415,14 @@ class _OrbitRingsPainter extends CustomPainter {
   bool shouldRepaint(covariant _OrbitRingsPainter oldDelegate) {
     return oldDelegate.rotation != rotation ||
            oldDelegate.orbitRadius != orbitRadius ||
-           oldDelegate.centerY != centerY;
+           oldDelegate.centerY != centerY ||
+           oldDelegate.isDarkMode != isDarkMode;
   }
 }
 
 
 
-class _AppDrawer extends StatelessWidget {
+class _AppDrawer extends ConsumerWidget {
   final List<_DrawerItem> _items = [
     _DrawerItem(icon: Icons.home_outlined, label: 'Home', route: '/app'),
     _DrawerItem(icon: Icons.explore_outlined, label: 'Discover', route: '/discover'),
@@ -421,6 +430,7 @@ class _AppDrawer extends StatelessWidget {
     _DrawerItem(icon: Icons.business_center_outlined, label: 'Businesses', route: '/business'),
     _DrawerItem(icon: Icons.auto_awesome_outlined, label: 'AI Hub', route: '/ai-hub'),
     _DrawerItem(icon: Icons.chat_bubble_outline, label: 'Messages', route: '/messages', badge: 3),
+    _DrawerItem(icon: Icons.notifications_outlined, label: 'Notifications', route: '/notifications', isNotifications: true),
     _DrawerItem(icon: Icons.shopping_bag_outlined, label: 'Shop', route: '/shop'),
     _DrawerItem(icon: Icons.psychology_outlined, label: 'AI Tools', route: '/ai-tools'),
     _DrawerItem(icon: Icons.person_outline, label: 'Profile', route: '/profile'),
@@ -428,9 +438,11 @@ class _AppDrawer extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userId = ref.watch(currentUserIdProvider);
+    final unreadCountAsync = ref.watch(unreadCountProvider(userId));
     return Drawer(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: context.isDarkMode ? const Color(0xFF0D0D0D) : const Color(0xFFFAFAFA),
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -448,24 +460,24 @@ class _AppDrawer extends StatelessWidget {
                       Text(
                         'U-ΛXIS',
                         style: TextStyle(
-                          color: const Color(0xFFF0F0F0),
+                          color: context.onSurface,
                           fontSize: 24,
                           fontWeight: FontWeight.w200,
                           letterSpacing: 4,
-                          shadows: [
+                          shadows: context.isDarkMode ? [
                             Shadow(
                               color: Colors.white.withValues(alpha: 0.15),
                               blurRadius: 10,
                               offset: Offset.zero,
                             ),
-                          ],
+                          ] : null,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'REDEFINING EXCELLENCE',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
+                          color: context.hintColor,
                           fontSize: 10,
                           letterSpacing: 2,
                         ),
@@ -478,15 +490,17 @@ class _AppDrawer extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
+                        color: context.isDarkMode 
+                            ? Colors.white.withValues(alpha: 0.05) 
+                            : Colors.black.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.1),
+                          color: context.dividerColor,
                         ),
                       ),
                       child: Icon(
                         Icons.close,
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: context.subtleIconColor,
                         size: 20,
                       ),
                     ),
@@ -501,7 +515,12 @@ class _AppDrawer extends StatelessWidget {
                 itemCount: _items.length,
                 itemBuilder: (context, index) {
                   final item = _items[index];
-                  return _DrawerListItem(item: item);
+                  int? badge = item.badge;
+                  if (item.isNotifications) {
+                    badge = unreadCountAsync.valueOrNull;
+                    if (badge == 0) badge = null;
+                  }
+                  return _DrawerListItem(item: item, badgeOverride: badge);
                 },
               ),
             ),
@@ -517,19 +536,22 @@ class _DrawerItem {
   final String label;
   final String route;
   final int? badge;
+  final bool isNotifications;
 
   const _DrawerItem({
     required this.icon,
     required this.label,
     required this.route,
     this.badge,
+    this.isNotifications = false,
   });
 }
 
 class _DrawerListItem extends StatelessWidget {
   final _DrawerItem item;
+  final int? badgeOverride;
 
-  const _DrawerListItem({required this.item});
+  const _DrawerListItem({required this.item, this.badgeOverride});
 
   @override
   Widget build(BuildContext context) {
@@ -549,7 +571,7 @@ class _DrawerListItem extends StatelessWidget {
           children: [
             Icon(
               item.icon,
-              color: Colors.white.withValues(alpha: 0.7),
+              color: context.subtleIconColor,
               size: 22,
             ),
             const SizedBox(width: 16),
@@ -557,12 +579,12 @@ class _DrawerListItem extends StatelessWidget {
               child: Text(
                 item.label,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85),
+                  color: context.onSurface.withValues(alpha: 0.85),
                   fontSize: 15,
                 ),
               ),
             ),
-            if (item.badge != null)
+            if (badgeOverride != null)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -570,7 +592,7 @@ class _DrawerListItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '${item.badge}',
+                  '$badgeOverride',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 11,

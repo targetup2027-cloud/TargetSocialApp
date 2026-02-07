@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/universe_back_button.dart';
 import '../../../core/widgets/uaxis_drawer.dart';
 import '../../../core/widgets/trust_widgets.dart';
+import '../../../app/theme/theme_extensions.dart';
 
 class TrustInfoScreen extends StatelessWidget {
   const TrustInfoScreen({super.key});
@@ -9,7 +10,7 @@ class TrustInfoScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: context.scaffoldBg,
       drawer: UAxisDrawer(),
       body: Stack(
         children: [
@@ -24,13 +25,13 @@ class TrustInfoScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 20),
-                        _buildHeader(),
+                        _buildHeader(context),
                         const SizedBox(height: 32),
                         const SearchResultsRanking(),
                         const SizedBox(height: 40),
                         const TrustLevelsGrid(),
                         const SizedBox(height: 40),
-                        _buildHowToIncreaseTrust(),
+                        _buildHowToIncreaseTrust(context),
                         const SizedBox(height: 100),
                       ],
                     ),
@@ -50,7 +51,7 @@ class TrustInfoScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -76,10 +77,10 @@ class TrustInfoScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                   Text(
                     'Trust Score System',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: context.onSurface,
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
                     ),
@@ -88,7 +89,7 @@ class TrustInfoScreen extends StatelessWidget {
                   Text(
                     'Build trust, gain visibility',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
+                      color: context.onSurface.withValues(alpha: 0.6),
                       fontSize: 14,
                     ),
                   ),
@@ -101,16 +102,16 @@ class TrustInfoScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF141418),
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.08),
+              color: context.dividerColor,
             ),
           ),
           child: Text(
             'Your Trust Score determines your visibility in search results and unlocks premium features. Higher scores mean more visibility and credibility.',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
+              color: context.onSurface.withValues(alpha: 0.7),
               fontSize: 13,
               height: 1.5,
             ),
@@ -120,7 +121,7 @@ class TrustInfoScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHowToIncreaseTrust() {
+  Widget _buildHowToIncreaseTrust(BuildContext context) {
     final tips = [
       _TrustTip(
         icon: Icons.person_pin,
@@ -157,10 +158,10 @@ class TrustInfoScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'How to Increase Your Trust Score',
           style: TextStyle(
-            color: Colors.white,
+            color: context.onSurface,
             fontSize: 20,
             fontWeight: FontWeight.w700,
           ),
@@ -170,10 +171,10 @@ class TrustInfoScreen extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF141418),
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: context.dividerColor,
                 ),
               ),
               child: Row(
@@ -198,8 +199,8 @@ class TrustInfoScreen extends StatelessWidget {
                       children: [
                         Text(
                           tip.title,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: context.onSurface,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
@@ -208,7 +209,7 @@ class TrustInfoScreen extends StatelessWidget {
                         Text(
                           tip.description,
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: context.onSurface.withValues(alpha: 0.5),
                             fontSize: 12,
                           ),
                         ),

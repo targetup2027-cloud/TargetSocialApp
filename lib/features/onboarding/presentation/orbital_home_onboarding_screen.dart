@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/motion/motion_system.dart';
 import '../../../../app/theme/uaxis_theme.dart';
+import '../../../../app/theme/theme_extensions.dart';
 
 class OrbitalHomeOnboardingScreen extends StatefulWidget {
   const OrbitalHomeOnboardingScreen({super.key});
@@ -60,7 +61,7 @@ class _OrbitalHomeOnboardingScreenState extends State<OrbitalHomeOnboardingScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: context.scaffoldBg,
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -110,28 +111,21 @@ class _OrbitalHomeOnboardingScreenState extends State<OrbitalHomeOnboardingScree
                           height: 100,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                const Color(0xFF2D2D2D),
-                                Colors.black.withValues(alpha: 0.9),
-                              ],
-                            ),
+                            color: context.cardColor,
                             border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.1),
+                              color: context.dividerColor,
                               width: 1,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.5),
+                                color: Colors.black.withValues(alpha: 0.2), // Subtle shadow
                                 blurRadius: 20,
                                 offset: const Offset(0, 10),
                               ),
                             ],
                           ),
                           child: CustomPaint(
-                            painter: _ConcentricCirclesPainter(),
+                            painter: _ConcentricCirclesPainter(color: context.onSurface),
                           ),
                         ),
                       ],
@@ -148,10 +142,10 @@ class _OrbitalHomeOnboardingScreenState extends State<OrbitalHomeOnboardingScree
                   padding: const EdgeInsets.symmetric(horizontal: 32.0),
                   child: Column(
                     children: [
-                      const Text(
+                      Text(
                         'Orbital Home',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: context.onSurface,
                           fontSize: 28,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
@@ -162,7 +156,7 @@ class _OrbitalHomeOnboardingScreenState extends State<OrbitalHomeOnboardingScree
                       Text(
                         'Navigate seamlessly between your business ecosystems. Each planet represents a different aspect of your business.',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: context.onSurfaceVariant,
                           fontSize: 16,
                           height: 1.5,
                           letterSpacing: 0.2,
@@ -186,13 +180,13 @@ class _OrbitalHomeOnboardingScreenState extends State<OrbitalHomeOnboardingScree
                         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                         decoration: BoxDecoration(
                           color: Colors.transparent,
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                          border: Border.all(color: context.dividerColor),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text(
+                        child: Text(
                           'Skip',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.onSurface,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -206,22 +200,22 @@ class _OrbitalHomeOnboardingScreenState extends State<OrbitalHomeOnboardingScree
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: context.onSurface,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 'Next',
                                 style: TextStyle(
-                                  color: Colors.black,
+                                  color: context.scaffoldBg,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              SizedBox(width: 8),
-                              Icon(Icons.chevron_right, color: Colors.black, size: 20),
+                              const SizedBox(width: 8),
+                              Icon(Icons.chevron_right, color: context.scaffoldBg, size: 20),
                             ],
                           ),
                         ),
@@ -242,7 +236,7 @@ class _OrbitalHomeOnboardingScreenState extends State<OrbitalHomeOnboardingScree
       duration: MotionTokens.purposeful,
       height: 4,
       decoration: BoxDecoration(
-        color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.1),
+        color: isActive ? const Color(0xFF8B5CF6) : const Color(0xFF8B5CF6).withValues(alpha: 0.2), // Primary color
         borderRadius: BorderRadius.circular(2),
       ),
     );
@@ -250,13 +244,17 @@ class _OrbitalHomeOnboardingScreenState extends State<OrbitalHomeOnboardingScree
 }
 
 class _ConcentricCirclesPainter extends CustomPainter {
+  final Color color;
+  
+  _ConcentricCirclesPainter({required this.color});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
-      ..color = Colors.white;
+      ..color = color;
 
     canvas.drawCircle(center, 12, paint);
     canvas.drawCircle(center, 20, paint);
@@ -264,10 +262,10 @@ class _ConcentricCirclesPainter extends CustomPainter {
 
     final fillPaint = Paint()
       ..style = PaintingStyle.fill
-      ..color = Colors.white;
+      ..color = color;
     canvas.drawCircle(center, 5, fillPaint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _ConcentricCirclesPainter oldDelegate) => oldDelegate.color != color;
 }

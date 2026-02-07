@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:math' as math;
 
+import '../../../app/theme/theme_extensions.dart';
+
 class LogoAssemblyScreen extends StatefulWidget {
   const LogoAssemblyScreen({super.key});
 
@@ -83,7 +85,7 @@ class _LogoAssemblyScreenState extends State<LogoAssemblyScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: context.scaffoldBg,
       body: Stack(
         children: [
           Center(
@@ -194,13 +196,13 @@ class _AnimatedLetter extends StatelessWidget {
                 child: Text(
                   data.char,
                   style: TextStyle(
-                    color: const Color(0xFFF0F0F0),
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: 42,
                     fontWeight: FontWeight.w200,
                     letterSpacing: 4,
                     shadows: [
                       Shadow(
-                        color: Colors.white.withValues(alpha: 0.2 * opacity),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2 * opacity),
                         blurRadius: 10,
                         offset: Offset.zero,
                       ),

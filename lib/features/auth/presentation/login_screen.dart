@@ -6,6 +6,7 @@ import '../../../app/theme/uaxis_theme.dart';
 import '../../../core/motion/motion_system.dart';
 import '../application/auth_controller.dart';
 import 'registration_flow_screen.dart';
+import '../../../app/theme/theme_extensions.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -32,7 +33,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D0D),
+      backgroundColor: context.scaffoldBg,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -47,13 +48,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Text(
                       'U-ΛXIS',
                       style: TextStyle(
-                        color: const Color(0xFFF0F0F0),
+                        color: context.onSurface,
                         fontSize: 42,
                         fontWeight: FontWeight.w200,
                         letterSpacing: 6,
                         shadows: [
                           Shadow(
-                            color: Colors.white.withValues(alpha: 0.15),
+                            color: context.onSurface.withValues(alpha: 0.15),
                             blurRadius: 15,
                             offset: Offset.zero,
                           ),
@@ -61,10 +62,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
+                    const SizedBox(height: 12),
+                    Text(
                       'Let\'s build your digital identity together.',
                       style: TextStyle(
-                        color: Color(0xFF888888),
+                        color: context.onSurfaceVariant,
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
                       ),
@@ -73,17 +75,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 24),
                     _buildSocialButton(
                       iconWidget: _isGoogleLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: context.onSurface,
                               ),
                             )
                           : CustomPaint(
                               size: const Size(20, 20),
-                              painter: _ChromeLogoPainter(),
+                              painter: _ChromeLogoPainter(color: context.onSurface),
                             ),
                       label: _isGoogleLoading ? 'Signing in...' : 'Continue with Google',
                       onTap: _isGoogleLoading
@@ -110,18 +112,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 24),
                     Row(
                       children: [
-                        Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.1))),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16),
+                        Expanded(child: Divider(color: context.dividerColor)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             'OR',
                             style: TextStyle(
-                              color: Color(0xFF666666),
+                              color: context.onSurfaceVariant,
                               fontSize: 12,
                             ),
                           ),
                         ),
-                        Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.1))),
+                        Expanded(child: Divider(color: context.dividerColor)),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -152,8 +154,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Text.rich(
                         TextSpan(
                           text: 'By continuing, you agree to our ',
-                          style: const TextStyle(
-                            color: Color(0xFF666666),
+                          style: TextStyle(
+                            color: context.onSurfaceVariant,
                             fontSize: 12,
                           ),
                           children: [
@@ -191,7 +193,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _buildEmailInputRow() {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        border: Border.all(color: context.dividerColor),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -200,7 +202,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             padding: const EdgeInsets.only(left: 14),
             child: Icon(
               Icons.email_outlined,
-              color: Colors.white.withValues(alpha: 0.5),
+              color: context.iconColor.withValues(alpha: 0.5),
               size: 20,
             ),
           ),
@@ -208,11 +210,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: context.onSurface, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Enter your email',
                 hintStyle: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.3),
+                  color: context.hintColor,
                   fontSize: 14,
                 ),
                 border: InputBorder.none,
@@ -261,7 +263,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _buildPhoneInputRow() {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        border: Border.all(color: context.dividerColor),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -270,7 +272,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             padding: const EdgeInsets.only(left: 14),
             child: Icon(
               Icons.phone_outlined,
-              color: Colors.white.withValues(alpha: 0.5),
+              color: context.iconColor.withValues(alpha: 0.5),
               size: 20,
             ),
           ),
@@ -279,7 +281,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Text(
               '+20',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5),
+                color: context.onSurface.withValues(alpha: 0.5),
                 fontSize: 14,
               ),
             ),
@@ -288,11 +290,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              style: const TextStyle(color: Colors.white, fontSize: 14),
+              style: TextStyle(color: context.onSurface, fontSize: 14),
               decoration: InputDecoration(
                 hintText: 'Enter your phone',
                 hintStyle: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.3),
+                  color: context.hintColor,
                   fontSize: 14,
                 ),
                 border: InputBorder.none,
@@ -352,18 +354,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+          border: Border.all(color: context.dividerColor),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            iconWidget ?? Icon(icon, color: Colors.white, size: 20),
+            iconWidget ?? Icon(icon, color: context.iconColor, size: 20),
             const SizedBox(width: 12),
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: context.onSurface,
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
               ),
@@ -376,6 +378,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 }
 
 class _ChromeLogoPainter extends CustomPainter {
+  final Color color;
+  _ChromeLogoPainter({required this.color});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -385,7 +390,7 @@ class _ChromeLogoPainter extends CustomPainter {
     final paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
-      ..color = Colors.white;
+      ..color = color;
 
     canvas.drawCircle(center, radius - 0.75, paint);
     canvas.drawCircle(center, innerRadius, paint);
@@ -402,7 +407,7 @@ class _ChromeLogoPainter extends CustomPainter {
   }
   
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _ChromeLogoPainter oldDelegate) => oldDelegate.color != color;
 }
 
 
@@ -476,6 +481,7 @@ class _EmailLoginSheetState extends ConsumerState<_EmailLoginSheet> {
       success = await authController.signUp(
         email: _emailController.text,
         password: _passwordController.text,
+        confirmPassword: _passwordController.text,
         displayName: _displayNameController.text,
       );
     } else {
@@ -527,7 +533,7 @@ class _EmailLoginSheetState extends ConsumerState<_EmailLoginSheet> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: context.dividerColor,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -535,8 +541,8 @@ class _EmailLoginSheetState extends ConsumerState<_EmailLoginSheet> {
               const SizedBox(height: 24),
               Text(
                 _isSignUp ? 'Create Account' : 'Sign In',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.onSurface,
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
                 ),
@@ -547,10 +553,11 @@ class _EmailLoginSheetState extends ConsumerState<_EmailLoginSheet> {
                 TextFormField(
                   controller: _displayNameController,
                   validator: _validateDisplayName,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: context.onSurface),
+                  decoration: InputDecoration(
                     hintText: 'Display Name',
-                    prefixIcon: Icon(Icons.person_outline),
+                    hintStyle: TextStyle(color: context.hintColor),
+                    prefixIcon: Icon(Icons.person_outline, color: context.iconColor),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -559,10 +566,11 @@ class _EmailLoginSheetState extends ConsumerState<_EmailLoginSheet> {
                 controller: _emailController,
                 validator: _validateEmail,
                 keyboardType: TextInputType.emailAddress,
-                style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
+                style: TextStyle(color: context.onSurface),
+                decoration: InputDecoration(
                   hintText: 'Email',
-                  prefixIcon: Icon(Icons.email_outlined),
+                  hintStyle: TextStyle(color: context.hintColor),
+                  prefixIcon: Icon(Icons.email_outlined, color: context.iconColor),
                 ),
               ),
               const SizedBox(height: 16),
@@ -570,13 +578,15 @@ class _EmailLoginSheetState extends ConsumerState<_EmailLoginSheet> {
                 controller: _passwordController,
                 validator: _validatePassword,
                 obscureText: _obscurePassword,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: context.onSurface),
                 decoration: InputDecoration(
                   hintText: 'Password',
-                  prefixIcon: const Icon(Icons.lock_outline),
+                  hintStyle: TextStyle(color: context.hintColor),
+                  prefixIcon: Icon(Icons.lock_outline, color: context.iconColor),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      color: context.iconColor,
                     ),
                     onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
@@ -588,10 +598,11 @@ class _EmailLoginSheetState extends ConsumerState<_EmailLoginSheet> {
                   controller: _confirmPasswordController,
                   validator: _validateConfirmPassword,
                   obscureText: true,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: context.onSurface),
+                  decoration: InputDecoration(
                     hintText: 'Confirm Password',
-                    prefixIcon: Icon(Icons.lock_outline),
+                    hintStyle: TextStyle(color: context.hintColor),
+                    prefixIcon: Icon(Icons.lock_outline, color: context.iconColor),
                   ),
                 ),
               ],

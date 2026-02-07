@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import '../../auth/application/auth_controller.dart';
 import '../../auth/application/auth_guard.dart';
 import '../../auth/data/session_store.dart';
+import '../../../../app/theme/theme_extensions.dart';
 
 class OnboardingOverlayScreen extends ConsumerStatefulWidget {
   const OnboardingOverlayScreen({super.key});
@@ -135,7 +136,7 @@ class _OnboardingOverlayScreenState extends ConsumerState<OnboardingOverlayScree
     final orbitRadius = math.min(shortestUsable * 0.38, 160.0);
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: context.scaffoldBg,
       body: Stack(
         children: [
           Builder(
@@ -151,6 +152,7 @@ class _OnboardingOverlayScreenState extends ConsumerState<OnboardingOverlayScree
                         rotation: _orbitController.value * 2 * math.pi * 0.1,
                         orbitRadius: orbitRadius,
                         centerY: centerY,
+                        ringColor: context.dividerColor,
                       ),
                     );
                   },
@@ -165,8 +167,8 @@ class _OnboardingOverlayScreenState extends ConsumerState<OnboardingOverlayScree
                 final centerY = (screenHeight - safePadding.bottom - 320) / 2 + safePadding.top;
                 return Stack(
                   children: [
-                    ..._buildOrbitPlanets(screenWidth, screenHeight, orbitRadius, centerY),
-                    _buildCenterProfile(centerY),
+                    ..._buildOrbitPlanets(screenWidth, screenHeight, orbitRadius, centerY, context),
+                    _buildCenterProfile(centerY, context),
                   ],
                 );
               },
@@ -235,21 +237,14 @@ class _OnboardingOverlayScreenState extends ConsumerState<OnboardingOverlayScree
                           padding: EdgeInsets.fromLTRB(24, 24, 24, 20),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                Color(0xFF1C1C2E),
-                                Color(0xFF151525),
-                              ],
-                            ),
+                            color: context.cardColor,
                             border: Border.all(
-                              color: currentStepData.activeColor.withValues(alpha: 0.15),
+                              color: context.dividerColor,
                               width: 1,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: currentStepData.activeColor.withValues(alpha: 0.08),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 30,
                                 offset: Offset(0, 10),
                               ),
@@ -262,7 +257,7 @@ class _OnboardingOverlayScreenState extends ConsumerState<OnboardingOverlayScree
                               Text(
                                 currentStepData.title,
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: context.onSurface,
                                   fontSize: 26,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -271,7 +266,7 @@ class _OnboardingOverlayScreenState extends ConsumerState<OnboardingOverlayScree
                               Text(
                                 currentStepData.description,
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.55),
+                                  color: context.onSurfaceVariant,
                                   fontSize: 15,
                                   height: 1.4,
                                 ),
@@ -339,7 +334,7 @@ class _OnboardingOverlayScreenState extends ConsumerState<OnboardingOverlayScree
                   child: Text(
                     'Skip tour',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.45),
+                      color: context.hintColor,
                       fontSize: 13,
                     ),
                   ),
@@ -354,7 +349,7 @@ class _OnboardingOverlayScreenState extends ConsumerState<OnboardingOverlayScree
     );
   }
 
-  List<Widget> _buildOrbitPlanets(double screenWidth, double screenHeight, double orbitRadius, double centerY) {
+  List<Widget> _buildOrbitPlanets(double screenWidth, double screenHeight, double orbitRadius, double centerY, BuildContext context) {
     final sections = [
       _OrbitSection(
         name: 'Discover',
@@ -396,12 +391,12 @@ class _OnboardingOverlayScreenState extends ConsumerState<OnboardingOverlayScree
       return Positioned(
         left: x,
         top: y,
-        child: _OrbitPlanet(section: section),
+        child: _OrbitPlanet(section: section, context: context),
       );
     }).toList();
   }
 
-  Widget _buildCenterProfile(double centerY) {
+  Widget _buildCenterProfile(double centerY, BuildContext context) {
     return Positioned(
       left: 0,
       right: 0,
@@ -430,8 +425,9 @@ class _OnboardingOverlayScreenState extends ConsumerState<OnboardingOverlayScree
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                color: context.cardColor,
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.15),
+                  color: context.dividerColor,
                   width: 1,
                 ),
                 image: const DecorationImage(
@@ -447,7 +443,7 @@ class _OnboardingOverlayScreenState extends ConsumerState<OnboardingOverlayScree
           Text(
             'My Profile',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: context.onSurface,
               fontSize: 12,
               fontWeight: FontWeight.w400,
               letterSpacing: 1,
@@ -487,8 +483,9 @@ class _OrbitSection {
 
 class _OrbitPlanet extends StatelessWidget {
   final _OrbitSection section;
+  final BuildContext context;
 
-  const _OrbitPlanet({required this.section});
+  const _OrbitPlanet({required this.section, required this.context});
 
   @override
   Widget build(BuildContext context) {
@@ -519,7 +516,7 @@ class _OrbitPlanet extends StatelessWidget {
         Text(
           section.name,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.7),
+            color: this.context.onSurfaceVariant,
             fontSize: 11,
           ),
         ),
@@ -532,11 +529,13 @@ class _OrbitRingsPainter extends CustomPainter {
   final double rotation;
   final double orbitRadius;
   final double centerY;
+  final Color ringColor;
 
   _OrbitRingsPainter({
     required this.rotation,
     required this.orbitRadius,
     required this.centerY,
+    required this.ringColor,
   });
 
   @override
@@ -546,19 +545,19 @@ class _OrbitRingsPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
-    paint.color = Colors.white.withValues(alpha: 0.06);
+    paint.color = ringColor.withValues(alpha: 0.15);
     canvas.drawCircle(center, orbitRadius, paint);
 
-    paint.color = Colors.white.withValues(alpha: 0.03);
+    paint.color = ringColor.withValues(alpha: 0.1);
     canvas.drawCircle(center, orbitRadius * 0.7, paint);
 
-    paint.color = Colors.white.withValues(alpha: 0.02);
+    paint.color = ringColor.withValues(alpha: 0.05);
     canvas.drawCircle(center, orbitRadius * 1.3, paint);
   }
 
   @override
   bool shouldRepaint(covariant _OrbitRingsPainter oldDelegate) {
-    return oldDelegate.rotation != rotation;
+    return oldDelegate.rotation != rotation || oldDelegate.ringColor != ringColor;
   }
 }
 

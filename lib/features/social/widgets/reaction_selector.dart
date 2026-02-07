@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../app/theme/theme_extensions.dart';
 import '../../../core/motion/motion_system.dart';
 import '../models/post_data.dart';
 
@@ -41,14 +42,16 @@ class _ReactionSelectorState extends State<ReactionSelector>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(50),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
+          color: context.dividerColor,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
+            color: context.isDarkMode 
+                ? Colors.black.withValues(alpha: 0.5) 
+                : Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),

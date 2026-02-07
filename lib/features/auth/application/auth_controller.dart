@@ -106,7 +106,11 @@ class AuthController extends StateNotifier<AuthState> {
   Future<bool> signUp({
     required String email,
     required String password,
-    required String displayName,
+    required String confirmPassword,
+    String? firstName,
+    String? lastName,
+    String? displayName,
+    DateTime? dateOfBirth,
   }) async {
     state = state.copyWith(isLoading: true, clearError: true);
 
@@ -114,7 +118,11 @@ class AuthController extends StateNotifier<AuthState> {
       final result = await _authRepo.signUp(
         email: email,
         password: password,
+        confirmPassword: confirmPassword,
+        firstName: firstName,
+        lastName: lastName,
         displayName: displayName,
+        dateOfBirth: dateOfBirth,
       );
 
       switch (result) {

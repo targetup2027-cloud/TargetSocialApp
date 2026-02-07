@@ -1,33 +1,27 @@
 Analyzing social_app...                                         
 
-   info - Empty catch block - lib\features\ai_hub\application\ai_controller.dart:136:17 - empty_catches
-   info - Empty catch block - lib\features\ai_hub\application\ai_controller.dart:271:17 - empty_catches
-   info - Empty catch block - lib\features\ai_hub\application\ai_controller.dart:315:17 - empty_catches
-   info - Empty catch block - lib\features\business\application\business_controller.dart:116:17 - empty_catches
-   info - Empty catch block - lib\features\business\application\business_controller.dart:128:17 - empty_catches
-   info - Empty catch block - lib\features\business\application\business_controller.dart:168:17 - empty_catches
-   info - Empty catch block - lib\features\business\application\business_controller.dart:210:17 - empty_catches
-   info - Empty catch block - lib\features\business\application\business_controller.dart:224:17 - empty_catches
-   info - Empty catch block - lib\features\business\application\business_controller.dart:234:17 - empty_catches
-   info - Empty catch block - lib\features\messages\application\messages_controller.dart:80:17 - empty_catches
-   info - Empty catch block - lib\features\messages\application\messages_controller.dart:99:17 - empty_catches
-   info - Empty catch block - lib\features\messages\application\messages_controller.dart:118:17 - empty_catches
-   info - Empty catch block - lib\features\messages\application\messages_controller.dart:193:17 - empty_catches
-   info - Empty catch block - lib\features\messages\application\messages_controller.dart:207:17 - empty_catches
-   info - Empty catch block - lib\features\messages\application\messages_controller.dart:217:17 - empty_catches
-   info - Empty catch block - lib\features\profile\application\profile_controller.dart:88:17 - empty_catches
-   info - Empty catch block - lib\features\profile\application\profile_controller.dart:100:17 - empty_catches
-   info - Empty catch block - lib\features\profile\application\profile_controller.dart:138:17 - empty_catches
-   info - Empty catch block - lib\features\profile\application\profile_controller.dart:185:17 - empty_catches
-   info - Empty catch block - lib\features\profile\application\profile_controller.dart:206:17 - empty_catches
-   info - Empty catch block - lib\features\social\application\posts_controller.dart:98:17 - empty_catches
-   info - Empty catch block - lib\features\social\application\posts_controller.dart:132:17 - empty_catches
-   info - Empty catch block - lib\features\social\application\posts_controller.dart:151:17 - empty_catches
-   info - Empty catch block - lib\features\social\application\posts_controller.dart:170:17 - empty_catches
-   info - Empty catch block - lib\features\social\application\posts_controller.dart:204:17 - empty_catches
-   info - Empty catch block - lib\features\social\application\posts_controller.dart:214:17 - empty_catches
-warning - Unnecessary cast - lib\features\social\data\datasources\posts_local_data_source.dart:44:43 - unnecessary_cast
-warning - Unnecessary cast - lib\features\social\data\datasources\posts_local_data_source.dart:60:43 - unnecessary_cast
-warning - Unused import: '../models/post_model.dart' - lib\features\social\data\repositories\posts_repository_impl.dart:5:8 - unused_import
+warning - Unused import: '../core/motion/motion_system.dart' - lib\app\router.dart:6:8 - unused_import
+warning - The declaration '_buildSharedAxisPage' isn't referenced - lib\app\router.dart:66:25 - unused_element
+warning - The declaration '_buildFadeThroughPage' isn't referenced - lib\app\router.dart:77:25 - unused_element
+warning - The declaration '_buildContainerTransformPage' isn't referenced - lib\app\router.dart:87:25 - unused_element
+warning - The declaration '_buildSlideFromBottomPage' isn't referenced - lib\app\router.dart:97:25 - unused_element
+   info - 'scale' is deprecated and shouldn't be used. Use scaleByVector3, scaleByVector4, or scaleByDouble instead - lib\core\widgets\animated_list_item.dart:224:42 - deprecated_member_use
+warning - The value of the local variable 'isActive' isn't used - lib\core\widgets\animated_tab_bar.dart:187:11 - unused_local_variable
+   info - 'scale' is deprecated and shouldn't be used. Use scaleByVector3, scaleByVector4, or scaleByDouble instead - lib\core\widgets\animated_tab_bar.dart:211:42 - deprecated_member_use
+warning - The value of the local variable 'isDark' isn't used - lib\core\widgets\uaxis_drawer.dart:284:11 - unused_local_variable
+   info - 'encryptedSharedPreferences' is deprecated and shouldn't be used. EncryptedSharedPreferences is deprecated and will be removed in v11. The Jetpack Security library is deprecated by Google. Your data will be automatically migrated to custom ciphers on first access. Remove this parameter - it will be ignored - lib\features\auth\data\session_store.dart:14:30 - deprecated_member_use
+   info - The import of 'dart:ui' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\features\messages\presentation\chat_detail_screen.dart:1:8 - unnecessary_import
+warning - Unused import: '../../../core/motion/motion_system.dart' - lib\features\notifications\presentation\notifications_screen.dart:5:8 - unused_import
+warning - Unused import: '../../../../core/motion/motion_system.dart' - lib\features\profile\presentation\widgets\social_connections_sheet.dart:5:8 - unused_import
+warning - Unused import: '../../../../core/widgets/animated_list_item.dart' - lib\features\profile\presentation\widgets\social_connections_sheet.dart:6:8 - unused_import
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\profile\presentation\widgets\social_connections_sheet.dart:320:19 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor or activeTrackColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\profile\presentation\widgets\social_connections_sheet.dart:476:11 - deprecated_member_use
+warning - Unused import: '../data/local/local_posts_repository.dart' - lib\features\social\application\posts_controller.dart:10:8 - unused_import
+   info - 'Share' is deprecated and shouldn't be used. Use SharePlus instead - lib\features\social\widgets\media_viewer.dart:154:13 - deprecated_member_use
+   info - 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead - lib\features\social\widgets\media_viewer.dart:154:19 - deprecated_member_use
+   info - 'Share' is deprecated and shouldn't be used. Use SharePlus instead - lib\features\social\widgets\post_card.dart:111:13 - deprecated_member_use
+   info - 'share' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead - lib\features\social\widgets\post_card.dart:111:19 - deprecated_member_use
+   info - 'scale' is deprecated and shouldn't be used. Use scaleByVector3, scaleByVector4, or scaleByDouble instead - lib\features\social\widgets\post_card.dart:145:42 - deprecated_member_use
+warning - Unused import: 'package:social_app/app/theme/theme_extensions.dart' - test\features\social\create_post_screen_test.dart:10:8 - unused_import
 
-29 issues found. (ran in 9.0s)
+23 issues found. (ran in 9.1s)

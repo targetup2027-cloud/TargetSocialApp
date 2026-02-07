@@ -58,7 +58,11 @@ class AuthInterceptor extends Interceptor {
     _isRefreshing = true;
 
     try {
-      final tokenPair = await _authRemoteDataSource.refresh(refreshToken);
+      final accessToken = await _sessionStore.readAccessToken();
+      final tokenPair = await _authRemoteDataSource.refresh(
+        accessToken: accessToken ?? '',
+        refreshToken: refreshToken,
+      );
       
       await _sessionStore.saveTokens(
         accessToken: tokenPair.accessToken,

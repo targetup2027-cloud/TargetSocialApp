@@ -6,39 +6,57 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../domain/user.dart';
 import '../datasources/auth_local_data_source.dart';
 import '../datasources/auth_remote_data_source.dart';
+import '../session_store.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthLocalDataSource _localDataSource;
   final AuthRemoteDataSource _remoteDataSource;
+  final SessionStore _sessionStore;
   final AppConfig _config;
 
   AuthRepositoryImpl({
     required AuthLocalDataSource localDataSource,
     required AuthRemoteDataSource remoteDataSource,
+    required SessionStore sessionStore,
     required AppConfig config,
   })  : _localDataSource = localDataSource,
         _remoteDataSource = remoteDataSource,
+        _sessionStore = sessionStore,
         _config = config;
 
   @override
   Future<Result<User>> signUp({
     required String email,
     required String password,
-    required String displayName,
+    required String confirmPassword,
+    String? firstName,
+    String? lastName,
+    String? displayName,
+    DateTime? dateOfBirth,
   }) async {
     try {
       if (_config.useRemoteData) {
-         final user = await _remoteDataSource.signUp(
+         final authResponse = await _remoteDataSource.signUp(
+          firstName: firstName ?? displayName ?? '',
+          lastName: lastName ?? '',
           email: email, 
           password: password, 
-          displayName: displayName
+          confirmPassword: confirmPassword,
+          dateOfBirth: dateOfBirth,
         );
-        return Success(user);
+        await _sessionStore.saveTokens(
+          accessToken: authResponse.tokens.accessToken,
+          refreshToken: authResponse.tokens.refreshToken,
+        );
+        await _sessionStore.saveSession(authResponse.user.id);
+        return Success(authResponse.user);
       } else {
         final user = await _localDataSource.signUp(
           email: email,
           password: password,
-          displayName: displayName,
+          displayName: displayName ?? [firstName, lastName]
+              .where((s) => s != null && s.isNotEmpty)
+              .join(' '),
         );
 
         if (user == null) {
@@ -58,12 +76,16 @@ class AuthRepositoryImpl implements AuthRepository {
   }) async {
     try {
       if (_config.useRemoteData) {
-         final user = await _remoteDataSource.login(
+         final authResponse = await _remoteDataSource.login(
           email: email, 
           password: password
         );
-        return Success(user);
-      } else {
+        await _sessionStore.saveTokens(
+          accessToken: authResponse.tokens.accessToken,
+          refreshToken: authResponse.tokens.refreshToken,
+        );
+        return Success(authResponse.user);
+      } else{
         final user = await _localDataSource.login(
           email: email,
           password: password,
@@ -83,9 +105,8 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<User?>> getUserById(String userId) async {
     try {
        if (_config.useRemoteData) {
-         // Should try remote first, if not then local cache? 
-         // For now, strict separation based on config as requested.
-         return const Success(null);
+         final user = await _remoteDataSource.getUserById(userId);
+         return Success(user);
        } else {
          final user = await _localDataSource.getUserById(userId);
          return Success(user);
@@ -103,20 +124,23 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Result<User>> signInWithGoogle(String idToken) async {
     try {
-      final user = await _remoteDataSource.signInWithGoogle(idToken);
-      return Success(user);
+      final authResponse = await _remoteDataSource.signInWithGoogle(idToken);
+      await _sessionStore.saveTokens(
+        accessToken: authResponse.tokens.accessToken,
+        refreshToken: authResponse.tokens.refreshToken,
+      );
+      return Success(authResponse.user);
     } catch (e) {
       return Err(AuthFailure(message: e.toString()));
     }
   }
 }
 
-// Ensure this provider matches the signature expected by consumers if possible, 
-// or I update consumers (which is better).
 final authRepositoryImplProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(
     localDataSource: ref.watch(authLocalDataSourceProvider),
     remoteDataSource: ref.watch(authRemoteDataSourceProvider),
+    sessionStore: ref.watch(sessionStoreProvider),
     config: currentConfig,
   );
 });

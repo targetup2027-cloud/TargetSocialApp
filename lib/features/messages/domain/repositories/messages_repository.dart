@@ -30,6 +30,10 @@ abstract class MessagesRepository {
   
   Future<void> deleteMessage(String conversationId, String messageId);
   
+  Future<void> deleteMultipleMessages(String conversationId, List<String> messageIds);
+  
+  Future<void> clearConversationForMe(String conversationId);
+  
   Future<void> markAsRead(String conversationId, String messageId);
   
   Future<void> markConversationAsRead(String conversationId);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/widgets/uaxis_drawer.dart';
 import '../../../core/widgets/universe_back_button.dart';
+import '../../../app/theme/theme_extensions.dart';
 
 class PaymentSuccessScreen extends StatefulWidget {
   const PaymentSuccessScreen({super.key});
@@ -54,7 +55,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
     final orderNumber = '#UAXIS-2024-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: context.scaffoldBg,
       drawer: UAxisDrawer(),
       body: Stack(
         children: [
@@ -94,10 +95,10 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                         const SizedBox(height: 32),
                         Opacity(
                           opacity: _fadeAnimation.value,
-                          child: const Text(
+                          child: Text(
                             'Payment Successful!',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: context.onSurface,
                               fontSize: 26,
                               fontWeight: FontWeight.w700,
                             ),
@@ -110,7 +111,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                             'Your order has been confirmed and will be shipped soon.',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.6),
+                              color: context.onSurfaceVariant,
                               fontSize: 15,
                             ),
                           ),
@@ -121,10 +122,10 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                           child: Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF141418),
+                              color: context.cardColor,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.08),
+                                color: context.dividerColor,
                               ),
                             ),
                             child: Column(
@@ -132,7 +133,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                                 Text(
                                   'Order Number',
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.5),
+                                    color: context.onSurfaceVariant,
                                     fontSize: 13,
                                   ),
                                 ),
@@ -182,7 +183,7 @@ class _PaymentSuccessScreenState extends State<PaymentSuccessScreen>
                             child: Text(
                               'Back to Home',
                               style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.6),
+                                color: context.hintColor,
                                 fontSize: 14,
                               ),
                             ),

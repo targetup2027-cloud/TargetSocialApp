@@ -5,7 +5,11 @@ abstract interface class AuthRepository {
   Future<Result<User>> signUp({
     required String email,
     required String password,
-    required String displayName,
+    required String confirmPassword,
+    String? firstName,
+    String? lastName,
+    String? displayName,
+    DateTime? dateOfBirth,
   });
 
   Future<Result<User>> login({

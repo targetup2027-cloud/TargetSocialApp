@@ -1,7 +1,6 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../../../../core/config/api_config.dart';
+import '../../../../core/network/network_client.dart';
 import '../models/post_model.dart';
+import '../../models/post_data.dart';
 
 abstract class PostsRemoteDataSource {
   Future<List<PostModel>> getFeed({int page = 1, int limit = 20});
@@ -18,10 +17,14 @@ abstract class PostsRemoteDataSource {
   Future<void> deletePost(String postId);
   Future<PostModel> likePost(String postId);
   Future<PostModel> unlikePost(String postId);
+  Future<void> incrementViews(String postId);
+  Future<PostModel> reactToPost(String postId, ReactionType type);
+  Future<PostModel> removeReaction(String postId);
   Future<PostModel> bookmarkPost(String postId);
   Future<PostModel> unbookmarkPost(String postId);
   Future<List<CommentModel>> getComments(String postId, {int page = 1, int limit = 20});
   Future<CommentModel> addComment(String postId, String content, {String? parentCommentId});
+  Future<CommentModel> updateComment(String postId, String commentId, String content);
   Future<void> deleteComment(String postId, String commentId);
   Future<CommentModel> likeComment(String commentId);
   Future<CommentModel> unlikeComment(String commentId);
@@ -31,76 +34,38 @@ abstract class PostsRemoteDataSource {
 }
 
 class PostsRemoteDataSourceImpl implements PostsRemoteDataSource {
-  final http.Client client;
-  final String? authToken;
+  final NetworkClient _client;
 
-  PostsRemoteDataSourceImpl({
-    required this.client,
-    this.authToken,
-  });
+  PostsRemoteDataSourceImpl({required NetworkClient client}) : _client = client;
 
-  Map<String, String> get _headers => {
-    'Content-Type': 'application/json',
-    if (authToken != null) 'Authorization': 'Bearer $authToken',
-  };
+  List<PostModel> _parsePostList(dynamic response) {
+    final List<dynamic> data = response['data'] ?? response;
+    return data.map((json) => PostModel.fromJson(json as Map<String, dynamic>)).toList();
+  }
 
   @override
   Future<List<PostModel>> getFeed({int page = 1, int limit = 20}) async {
-    final response = await client.get(
-      Uri.parse('${ApiConfig.baseUrl}/posts?page=$page&limit=$limit'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body)['data'];
-      return data.map((json) => PostModel.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load feed');
-    }
+    final response = await _client.get('/api/Posts/feed');
+    return _parsePostList(response);
   }
 
   @override
   Future<List<PostModel>> getDiscoverFeed({int page = 1, int limit = 20}) async {
-    final response = await client.get(
-      Uri.parse('${ApiConfig.baseUrl}/posts/discover?page=$page&limit=$limit'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body)['data'];
-      return data.map((json) => PostModel.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load discover feed');
-    }
+    final response = await _client.get('/api/Posts/feed');
+    return _parsePostList(response);
   }
 
   @override
   Future<List<PostModel>> getUserPosts(String userId, {int page = 1, int limit = 20}) async {
-    final response = await client.get(
-      Uri.parse('${ApiConfig.baseUrl}/users/$userId/posts?page=$page&limit=$limit'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body)['data'];
-      return data.map((json) => PostModel.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load user posts');
-    }
+    final response = await _client.get('/api/Posts/user/$userId');
+    return _parsePostList(response);
   }
 
   @override
   Future<PostModel> getPostById(String postId) async {
-    final response = await client.get(
-      Uri.parse('${ApiConfig.baseUrl}/posts/$postId'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      return PostModel.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to load post');
-    }
+    final response = await _client.get('/api/Posts/$postId');
+    final data = response['data'] ?? response;
+    return PostModel.fromJson(data as Map<String, dynamic>);
   }
 
   @override
@@ -110,221 +75,154 @@ class PostsRemoteDataSourceImpl implements PostsRemoteDataSource {
     String? mediaType,
     String? location,
   }) async {
-    final response = await client.post(
-      Uri.parse('${ApiConfig.baseUrl}/posts'),
-      headers: _headers,
-      body: json.encode({
-        'content': content,
-        if (mediaUrls != null) 'mediaUrls': mediaUrls,
-        if (mediaType != null) 'mediaType': mediaType,
-        if (location != null) 'location': location,
-      }),
-    );
+    final response = await _client.post('/api/Posts', data: {
+      'content': content,
+      if (mediaUrls != null) 'mediaUrls': mediaUrls,
+      if (mediaType != null) 'mediaType': mediaType,
+      if (location != null) 'location': location,
+    });
 
-    if (response.statusCode == 201) {
-      return PostModel.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to create post');
-    }
+    final data = response['data'] ?? response;
+    return PostModel.fromJson(data as Map<String, dynamic>);
   }
 
   @override
   Future<PostModel> updatePost(String postId, {String? content}) async {
-    final response = await client.put(
-      Uri.parse('${ApiConfig.baseUrl}/posts/$postId'),
-      headers: _headers,
-      body: json.encode({
-        if (content != null) 'content': content,
-      }),
-    );
+    final response = await _client.put('/api/Posts/$postId', data: {
+      if (content != null) 'content': content,
+    });
 
-    if (response.statusCode == 200) {
-      return PostModel.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to update post');
-    }
+    final data = response['data'] ?? response;
+    return PostModel.fromJson(data as Map<String, dynamic>);
   }
 
   @override
   Future<void> deletePost(String postId) async {
-    final response = await client.delete(
-      Uri.parse('${ApiConfig.baseUrl}/posts/$postId'),
-      headers: _headers,
-    );
-
-    if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete post');
-    }
+    await _client.delete('/api/Posts/$postId');
   }
 
   @override
   Future<PostModel> likePost(String postId) async {
-    final response = await client.post(
-      Uri.parse('${ApiConfig.baseUrl}/posts/$postId/like'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      return PostModel.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to like post');
-    }
+    final response = await _client.post('/api/Posts/$postId/like');
+    final data = response['data'] ?? response;
+    return PostModel.fromJson(data as Map<String, dynamic>);
   }
 
   @override
   Future<PostModel> unlikePost(String postId) async {
-    final response = await client.delete(
-      Uri.parse('${ApiConfig.baseUrl}/posts/$postId/like'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      return PostModel.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to unlike post');
-    }
+    final response = await _client.post('/api/Posts/$postId/like');
+    final data = response['data'] ?? response;
+    return PostModel.fromJson(data as Map<String, dynamic>);
   }
 
   @override
   Future<PostModel> bookmarkPost(String postId) async {
-    final response = await client.post(
-      Uri.parse('${ApiConfig.baseUrl}/posts/$postId/bookmark'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      return PostModel.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to bookmark post');
-    }
+    final response = await _client.post('/api/Posts/$postId/save');
+    final data = response['data'] ?? response;
+    return PostModel.fromJson(data as Map<String, dynamic>);
   }
 
   @override
   Future<PostModel> unbookmarkPost(String postId) async {
-    final response = await client.delete(
-      Uri.parse('${ApiConfig.baseUrl}/posts/$postId/bookmark'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      return PostModel.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to unbookmark post');
-    }
+    final response = await _client.delete('/api/Posts/$postId/save');
+    final data = response['data'] ?? response;
+    return PostModel.fromJson(data as Map<String, dynamic>);
   }
 
   @override
   Future<List<CommentModel>> getComments(String postId, {int page = 1, int limit = 20}) async {
-    final response = await client.get(
-      Uri.parse('${ApiConfig.baseUrl}/posts/$postId/comments?page=$page&limit=$limit'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body)['data'];
-      return data.map((json) => CommentModel.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load comments');
-    }
+    final response = await _client.get('/api/posts/$postId/comments');
+    return (response['data'] as List<dynamic>?)
+            ?.map((json) => CommentModel.fromJson(json as Map<String, dynamic>))
+            .toList() ??
+        [];
   }
 
   @override
   Future<CommentModel> addComment(String postId, String content, {String? parentCommentId}) async {
-    final response = await client.post(
-      Uri.parse('${ApiConfig.baseUrl}/posts/$postId/comments'),
-      headers: _headers,
-      body: json.encode({
-        'content': content,
-        if (parentCommentId != null) 'parentCommentId': parentCommentId,
-      }),
-    );
+    final response = await _client.post('/api/posts/$postId/comments', data: {
+      'content': content,
+      if (parentCommentId != null) 'parentCommentId': parentCommentId,
+    });
 
-    if (response.statusCode == 201) {
-      return CommentModel.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to add comment');
-    }
+    final data = response['data'] ?? response;
+    return CommentModel.fromJson(data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<CommentModel> updateComment(String postId, String commentId, String content) async {
+    final response = await _client.put('/api/comments/$commentId', data: {
+      'content': content,
+    });
+
+    final data = response['data'] ?? response;
+    return CommentModel.fromJson(data as Map<String, dynamic>);
   }
 
   @override
   Future<void> deleteComment(String postId, String commentId) async {
-    final response = await client.delete(
-      Uri.parse('${ApiConfig.baseUrl}/posts/$postId/comments/$commentId'),
-      headers: _headers,
-    );
-
-    if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed to delete comment');
-    }
+    await _client.delete('/api/comments/$commentId');
   }
 
   @override
   Future<CommentModel> likeComment(String commentId) async {
-    final response = await client.post(
-      Uri.parse('${ApiConfig.baseUrl}/comments/$commentId/like'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      return CommentModel.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to like comment');
-    }
+    final response = await _client.post('/api/comments/$commentId/like');
+    final data = response['data'] ?? response;
+    return CommentModel.fromJson(data as Map<String, dynamic>);
   }
 
   @override
   Future<CommentModel> unlikeComment(String commentId) async {
-    final response = await client.delete(
-      Uri.parse('${ApiConfig.baseUrl}/comments/$commentId/like'),
-      headers: _headers,
-    );
-
-    if (response.statusCode == 200) {
-      return CommentModel.fromJson(json.decode(response.body));
-    } else {
-      throw Exception('Failed to unlike comment');
-    }
+    final response = await _client.delete('/api/comments/$commentId/like');
+    final data = response['data'] ?? response;
+    return CommentModel.fromJson(data as Map<String, dynamic>);
   }
 
   @override
   Future<void> sharePost(String postId) async {
-    final response = await client.post(
-      Uri.parse('${ApiConfig.baseUrl}/posts/$postId/share'),
-      headers: _headers,
-    );
-
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to share post');
-    }
+    await _client.post('/api/Posts/$postId/share');
   }
 
   @override
   Future<List<PostModel>> searchPosts(String query, {int page = 1, int limit = 20}) async {
-    final response = await client.get(
-      Uri.parse('${ApiConfig.baseUrl}/posts/search?q=$query&page=$page&limit=$limit'),
-      headers: _headers,
+    final response = await _client.get(
+      '/api/Search/posts',
+      queryParameters: {'query': query},
     );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body)['data'];
-      return data.map((json) => PostModel.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to search posts');
-    }
+    return _parsePostList(response);
   }
 
   @override
   Future<List<PostModel>> getPostsByHashtag(String hashtag, {int page = 1, int limit = 20}) async {
-    final response = await client.get(
-      Uri.parse('${ApiConfig.baseUrl}/posts/hashtag/$hashtag?page=$page&limit=$limit'),
-      headers: _headers,
+    final response = await _client.get(
+      '/api/Search/hashtags',
+      queryParameters: {'query': hashtag},
     );
+    return _parsePostList(response);
+  }
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body)['data'];
-      return data.map((json) => PostModel.fromJson(json)).toList();
-    } else {
-      throw Exception('Failed to load posts by hashtag');
+  @override
+  Future<void> incrementViews(String postId) async {
+    try {
+      await _client.post('/api/Posts/$postId/view');
+    } catch (_) {
+      // Fire-and-forget
     }
+  }
+
+  @override
+  Future<PostModel> reactToPost(String postId, ReactionType type) async {
+    final response = await _client.post('/api/Posts/$postId/react', data: {
+      'type': type.name,
+    });
+    final data = response['data'] ?? response;
+    return PostModel.fromJson(data as Map<String, dynamic>);
+  }
+
+  @override
+  Future<PostModel> removeReaction(String postId) async {
+    final response = await _client.post('/api/Posts/$postId/react');
+    final data = response['data'] ?? response;
+    return PostModel.fromJson(data as Map<String, dynamic>);
   }
 }

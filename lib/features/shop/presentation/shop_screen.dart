@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../app/theme/theme_extensions.dart';
 import '../../../core/widgets/uaxis_drawer.dart';
 import '../../../core/widgets/universe_back_button.dart';
 import '../../../core/models/trust_score.dart';
@@ -21,15 +22,13 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
   final List<String> _categories = ['All', 'Fashion', 'Tech', 'Food & D...'];
 
-
-
   @override
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productsProvider);
     
     return Scaffold(
-      backgroundColor: Colors.black,
-      drawer: UAxisDrawer(),
+      backgroundColor: context.scaffoldBg,
+      drawer: const UAxisDrawer(),
       body: Stack(
         children: [
           CustomScrollView(
@@ -72,7 +71,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   );
                 },
                 loading: () => const SliverToBoxAdapter(child: Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()))),
-                error: (err, stack) => SliverToBoxAdapter(child: Center(child: Text('Error loading products', style: const TextStyle(color: Colors.white)))),
+                error: (err, stack) => SliverToBoxAdapter(child: Center(child: Text('Error loading products', style: TextStyle(color: context.onSurface)))),
               ),
               SliverToBoxAdapter(
                 child: Padding(
@@ -102,10 +101,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Business Marketplace',
             style: TextStyle(
-              color: Colors.white,
+              color: context.onSurface,
               fontSize: 24,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.5,
@@ -115,7 +114,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           Text(
             'Discover products from trusted businesses',
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+              color: context.onSurfaceVariant,
               fontSize: 14,
             ),
           ),
@@ -130,10 +129,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       child: Container(
         height: 48,
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1F),
+          color: context.cardColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: context.dividerColor,
           ),
         ),
         child: Row(
@@ -142,14 +141,14 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             Icon(
               Icons.search,
               size: 20,
-              color: Colors.white.withValues(alpha: 0.4),
+              color: context.hintColor,
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 'Search products, brands, categories...',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.4),
+                  color: context.hintColor,
                   fontSize: 14,
                 ),
               ),
@@ -193,12 +192,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                           colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                         )
                       : null,
-                  color: isSelected ? null : const Color(0xFF1A1A1F),
+                  color: isSelected ? null : context.cardColor,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isSelected
                         ? Colors.transparent
-                        : Colors.white.withValues(alpha: 0.1),
+                        : context.dividerColor,
                   ),
                 ),
                 alignment: Alignment.center,
@@ -207,7 +206,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   style: TextStyle(
                     color: isSelected
                         ? Colors.white
-                        : Colors.white.withValues(alpha: 0.7),
+                        : context.onSurface,
                     fontSize: 14,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   ),
@@ -230,10 +229,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
               height: 40,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1A1F),
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.08),
+                  color: context.dividerColor,
                 ),
               ),
               child: DropdownButtonHideUnderline(
@@ -241,11 +240,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   value: _sortBy,
                   icon: Icon(
                     Icons.keyboard_arrow_down,
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: context.iconColor,
                   ),
-                  dropdownColor: const Color(0xFF1A1A1F),
-                  style: const TextStyle(
-                    color: Colors.white,
+                  dropdownColor: context.cardColor,
+                  style: TextStyle(
+                    color: context.onSurface,
                     fontSize: 14,
                   ),
                   items: ['Most Popular', 'Newest', 'Price: Low to High', 'Price: High to Low']
@@ -261,10 +260,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1F),
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
+                color: context.dividerColor,
               ),
             ),
             child: Row(
@@ -272,13 +271,13 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 Icon(
                   Icons.tune,
                   size: 18,
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: context.iconColor,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'Filters',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: context.onSurface,
                     fontSize: 14,
                   ),
                 ),
@@ -302,10 +301,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
               size: 24,
             ),
             const SizedBox(width: 8),
-            const Text(
+            Text(
               'Hot Deals',
               style: TextStyle(
-                color: Colors.white,
+                color: context.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
@@ -318,10 +317,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           width: double.infinity,
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: const Color(0xFF161525),
+            color: context.cardColor,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: context.dividerColor,
             ),
           ),
           child: Stack(
@@ -334,7 +333,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   child: Icon(
                     Icons.local_offer_outlined,
                     size: 120,
-                    color: Colors.white.withValues(alpha: 0.03),
+                    color: context.onSurface.withValues(alpha: 0.03),
                   ),
                 ),
               ),
@@ -349,10 +348,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                       spacing: 10,
                       runSpacing: 8,
                       children: [
-                        const Text(
+                        Text(
                           'Weekend Flash Sale',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.onSurface,
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
                           ),
@@ -378,7 +377,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                     Text(
                       'Up to 50% off on selected items',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: context.onSurfaceVariant,
                         fontSize: 13,
                       ),
                     ),
@@ -386,11 +385,11 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: context.primaryColor,
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.white.withValues(alpha: 0.1),
+                            color: context.primaryColor.withValues(alpha: 0.3),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -399,7 +398,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                       child: const Text(
                         'Shop Now',
                         style: TextStyle(
-                          color: Color(0xFF4F46E5),
+                          color: Colors.white,
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                         ),
@@ -416,8 +415,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   }
 }
 
-
-
 class _ProductCard extends ConsumerWidget {
   final Product product;
 
@@ -429,14 +426,14 @@ class _ProductCard extends ConsumerWidget {
       onTap: () => context.push('/store/techpro'),
       child: Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF101014),
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: context.dividerColor,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
+            color: Colors.black.withValues(alpha: context.isDarkMode ? 0.2 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -557,7 +554,7 @@ class _ProductCard extends ConsumerWidget {
                             child: Text(
                               product.storeName,
                               style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.5),
+                                color: context.onSurfaceVariant,
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -584,8 +581,8 @@ class _ProductCard extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         product.name,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.onSurface,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           height: 1.2,
@@ -604,8 +601,8 @@ class _ProductCard extends ConsumerWidget {
                           const SizedBox(width: 4),
                           Text(
                             product.rating.toString(),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: context.onSurface,
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                             ),
@@ -614,7 +611,7 @@ class _ProductCard extends ConsumerWidget {
                           Text(
                             '(${_formatCount(product.reviewCount)})',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.4),
+                              color: context.hintColor,
                               fontSize: 11,
                             ),
                           ),
@@ -631,8 +628,8 @@ class _ProductCard extends ConsumerWidget {
                         children: [
                           Text(
                             '\$${product.price.toStringAsFixed(product.price == product.price.roundToDouble() ? 0 : 2)}',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: context.onSurface,
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
                               height: 1.0,
@@ -645,11 +642,11 @@ class _ProductCard extends ConsumerWidget {
                               child: Text(
                                 '\$${product.originalPrice!.toStringAsFixed(0)}',
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.4),
+                                  color: context.hintColor,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
                                   decoration: TextDecoration.lineThrough,
-                                  decorationColor: Colors.white.withValues(alpha: 0.4),
+                                  decorationColor: context.hintColor,
                                 ),
                               ),
                             ),
@@ -689,10 +686,10 @@ class _ProductCard extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(10),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 16),
-                                const SizedBox(width: 6),
-                                const Text(
+                              children: const [
+                                Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 16),
+                                SizedBox(width: 6),
+                                Text(
                                   'Add to Cart',
                                   style: TextStyle(
                                     color: Colors.white,

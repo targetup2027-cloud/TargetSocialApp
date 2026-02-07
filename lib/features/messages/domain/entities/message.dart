@@ -90,6 +90,9 @@ class Message {
   final Message? replyToMessage;
   final List<MessageReaction> reactions;
   final bool isDeleted;
+  final bool isEdited;
+  final bool isForwarded;
+  final String? forwardedFromMessageId;
 
   const Message({
     required this.id,
@@ -107,6 +110,9 @@ class Message {
     this.replyToMessage,
     this.reactions = const [],
     this.isDeleted = false,
+    this.isEdited = false,
+    this.isForwarded = false,
+    this.forwardedFromMessageId,
   });
 
   Message copyWith({
@@ -125,6 +131,9 @@ class Message {
     Message? replyToMessage,
     List<MessageReaction>? reactions,
     bool? isDeleted,
+    bool? isEdited,
+    bool? isForwarded,
+    String? forwardedFromMessageId,
   }) {
     return Message(
       id: id ?? this.id,
@@ -142,6 +151,9 @@ class Message {
       replyToMessage: replyToMessage ?? this.replyToMessage,
       reactions: reactions ?? this.reactions,
       isDeleted: isDeleted ?? this.isDeleted,
+      isEdited: isEdited ?? this.isEdited,
+      isForwarded: isForwarded ?? this.isForwarded,
+      forwardedFromMessageId: forwardedFromMessageId ?? this.forwardedFromMessageId,
     );
   }
 }

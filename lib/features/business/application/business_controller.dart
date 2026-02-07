@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
 import '../domain/entities/business.dart';
 import '../domain/repositories/business_repository.dart';
 import '../data/repositories/business_repository_impl.dart';
@@ -83,10 +85,10 @@ class MyBusinessController extends StateNotifier<AsyncValue<Business>> {
 
   Future<void> updateBusiness({
     String? name,
-    String? description,
-    String? website,
-    String? email,
-    String? phone,
+    Nullable<String>? description,
+    Nullable<String>? website,
+    Nullable<String>? email,
+    Nullable<String>? phone,
   }) async {
     final currentBusiness = state.valueOrNull;
     if (currentBusiness == null) return;
@@ -112,9 +114,9 @@ class MyBusinessController extends StateNotifier<AsyncValue<Business>> {
 
     try {
       final newLogoUrl = await _repository.updateBusinessLogo(currentBusiness.id, imagePath);
-      state = AsyncValue.data(currentBusiness.copyWith(logoUrl: newLogoUrl));
-    } catch (e) {
-      
+      state = AsyncValue.data(currentBusiness.copyWith(logoUrl: Nullable(newLogoUrl)));
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     }
   }
 
@@ -124,9 +126,9 @@ class MyBusinessController extends StateNotifier<AsyncValue<Business>> {
 
     try {
       final newCoverUrl = await _repository.updateBusinessCover(currentBusiness.id, imagePath);
-      state = AsyncValue.data(currentBusiness.copyWith(coverImageUrl: newCoverUrl));
-    } catch (e) {
-      
+      state = AsyncValue.data(currentBusiness.copyWith(coverImageUrl: Nullable(newCoverUrl)));
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     }
   }
 }
@@ -135,6 +137,121 @@ final myBusinessControllerProvider = StateNotifierProvider<MyBusinessController,
   final repository = ref.watch(businessRepositoryProvider);
   return MyBusinessController(repository);
 });
+
+final userBusinessesProvider = StateNotifierProvider<UserBusinessesController, AsyncValue<List<Business>>>((ref) {
+  final repository = ref.watch(businessRepositoryProvider);
+  return UserBusinessesController(repository);
+});
+
+class UserBusinessesController extends StateNotifier<AsyncValue<List<Business>>> {
+  final BusinessRepository _repository;
+
+  UserBusinessesController(this._repository) : super(const AsyncValue.loading()) {
+    loadBusinesses();
+  }
+
+  Future<void> loadBusinesses() async {
+    state = const AsyncValue.loading();
+    try {
+      final businesses = await _repository.getMyBusinesses();
+      state = AsyncValue.data(businesses);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> createBusiness({
+    required String name,
+    String? description,
+    required BusinessCategory category,
+    String? email,
+    String? phone,
+    String? website,
+    String? address,
+    String? commercialRegistration,
+    String? taxNumber,
+    int? foundingYear,
+    Uint8List? logoBytes,
+    Uint8List? coverBytes,
+    XFile? verticalVideo,
+    XFile? horizontalVideo,
+    List<XFile>? galleryImages,
+  }) async {
+    final currentList = state.valueOrNull ?? [];
+    try {
+      final newBusiness = await _repository.createBusiness(
+        name: name,
+        description: description,
+        category: category,
+        email: email,
+        phone: phone,
+        website: website,
+        address: address,
+        commercialRegistration: commercialRegistration,
+        taxNumber: taxNumber,
+        foundingYear: foundingYear,
+        logoBytes: logoBytes,
+        coverBytes: coverBytes,
+        imageFiles: galleryImages,
+        verticalVideo: verticalVideo,
+        horizontalVideo: horizontalVideo,
+      );
+      state = AsyncValue.data([...currentList, newBusiness]);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> updateBusiness(
+    Business business, {
+    Uint8List? logoBytes,
+    Uint8List? coverBytes,
+    List<XFile>? imageFiles,
+    XFile? verticalVideo,
+    XFile? horizontalVideo,
+  }) async {
+    final currentList = state.valueOrNull ?? [];
+    try {
+      final updatedBusiness = await _repository.updateBusiness(
+        business.id,
+        name: business.name,
+        description: Nullable(business.description),
+        website: Nullable(business.website),
+        email: Nullable(business.email),
+        phone: Nullable(business.phone),
+        address: Nullable(business.address),
+        category: business.category,
+        subcategories: business.subcategories,
+        hours: Nullable(business.hours),
+        socialLinks: Nullable(business.socialLinks),
+        commercialRegistration: Nullable(business.commercialRegistration),
+        taxNumber: Nullable(business.taxNumber),
+        foundingYear: Nullable(business.foundingYear),
+        logoBytes: logoBytes,
+        coverBytes: coverBytes,
+        imageFiles: imageFiles,
+        verticalVideo: verticalVideo,
+        horizontalVideo: horizontalVideo,
+      );
+      final updatedList = currentList.map((b) {
+        return b.id == business.id ? updatedBusiness : b;
+      }).toList();
+      state = AsyncValue.data(updatedList);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> deleteBusiness(String businessId) async {
+    final currentList = state.valueOrNull ?? [];
+    try {
+      await _repository.deleteBusiness(businessId);
+      state = AsyncValue.data(currentList.where((b) => b.id != businessId).toList());
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+}
 
 class BusinessProfileController extends StateNotifier<AsyncValue<Business>> {
   final BusinessRepository _repository;
@@ -165,8 +282,8 @@ class BusinessProfileController extends StateNotifier<AsyncValue<Business>> {
     try {
       final updatedBusiness = await _repository.followBusiness(businessId);
       state = AsyncValue.data(updatedBusiness);
-    } catch (e) {
-      
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     }
   }
 }
@@ -207,8 +324,8 @@ class BusinessReviewsController extends StateNotifier<AsyncValue<List<BusinessRe
       _currentPage++;
       _hasMore = newReviews.length >= 20;
       state = AsyncValue.data([...currentReviews, ...newReviews]);
-    } catch (e) {
-      
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     }
   }
 
@@ -221,8 +338,8 @@ class BusinessReviewsController extends StateNotifier<AsyncValue<List<BusinessRe
       );
       final currentReviews = state.valueOrNull ?? [];
       state = AsyncValue.data([newReview, ...currentReviews]);
-    } catch (e) {
-      
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     }
   }
 
@@ -231,8 +348,8 @@ class BusinessReviewsController extends StateNotifier<AsyncValue<List<BusinessRe
       await _repository.deleteReview(businessId, reviewId);
       final currentReviews = state.valueOrNull ?? [];
       state = AsyncValue.data(currentReviews.where((r) => r.id != reviewId).toList());
-    } catch (e) {
-      
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     }
   }
 }

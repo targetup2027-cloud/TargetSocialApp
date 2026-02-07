@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../app/theme/theme_extensions.dart';
+import '../../../app/theme/uaxis_theme.dart';
 import '../../../core/widgets/uaxis_drawer.dart';
 import '../../../core/widgets/universe_back_button.dart';
-import '../../../app/theme/uaxis_theme.dart';
 import '../../../core/motion/motion_system.dart';
 
 class AIHubScreen extends StatefulWidget {
@@ -116,7 +117,7 @@ class _AIHubScreenState extends State<AIHubScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: context.scaffoldBg,
       drawer: const UAxisDrawer(),
       body: Stack(
         children: [
@@ -129,10 +130,10 @@ class _AIHubScreenState extends State<AIHubScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'AI Hub',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: context.onSurface,
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                         ),
@@ -141,7 +142,7 @@ class _AIHubScreenState extends State<AIHubScreen> {
                       Text(
                         'Your intelligent assistant network',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: context.onSurfaceVariant,
                           fontSize: 14,
                         ),
                       ),
@@ -176,6 +177,8 @@ class _AIHubScreenState extends State<AIHubScreen> {
 
   Widget _buildTab(int index, String label, IconData icon) {
     final isSelected = _selectedTab == index;
+    final primaryColor = const Color(0xFF06B6D4); // AI Hub Theme Color
+
     return GestureDetector(
       onTap: () => setState(() => _selectedTab = index),
       child: AnimatedContainer(
@@ -184,12 +187,12 @@ class _AIHubScreenState extends State<AIHubScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF06B6D4).withValues(alpha: 0.15)
+              ? primaryColor.withValues(alpha: 0.15)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected
-                ? const Color(0xFF06B6D4).withValues(alpha: 0.5)
+                ? primaryColor.withValues(alpha: 0.5)
                 : Colors.transparent,
           ),
         ),
@@ -199,16 +202,16 @@ class _AIHubScreenState extends State<AIHubScreen> {
               icon,
               size: 18,
               color: isSelected
-                  ? const Color(0xFF22D3EE)
-                  : Colors.white.withValues(alpha: 0.4),
+                  ? const Color(0xFF0891B2)
+                  : context.iconColor,
             ),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 color: isSelected
-                    ? const Color(0xFFCFFAFE)
-                    : Colors.white.withValues(alpha: 0.4),
+                    ? const Color(0xFF0891B2)
+                    : context.onSurfaceVariant,
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
@@ -289,12 +292,12 @@ class _AIHubScreenState extends State<AIHubScreen> {
         Container(
           width: 36,
           height: 36,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
               colors: [
-                const Color(0xFF06B6D4),
-                const Color(0xFF0891B2),
+                Color(0xFF06B6D4),
+                Color(0xFF0891B2),
               ],
             ),
           ),
@@ -305,16 +308,16 @@ class _AIHubScreenState extends State<AIHubScreen> {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF151520),
+              color: context.cardColor,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: context.dividerColor,
               ),
             ),
             child: Text(
               text,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: context.onSurface.withValues(alpha: 0.9),
                 fontSize: 15,
                 height: 1.5,
               ),
@@ -329,18 +332,18 @@ class _AIHubScreenState extends State<AIHubScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: context.scaffoldBg,
         border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+          top: BorderSide(color: context.dividerColor),
         ),
       ),
       child: Container(
         height: 52,
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A1F),
+          color: context.cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: context.dividerColor,
           ),
         ),
         child: Row(
@@ -348,11 +351,11 @@ class _AIHubScreenState extends State<AIHubScreen> {
             Expanded(
               child: TextField(
                 controller: _chatController,
-                style: const TextStyle(color: Colors.white, fontSize: 15),
+                style: TextStyle(color: context.onSurface, fontSize: 15),
                 decoration: InputDecoration(
                   hintText: 'Ask me anything...',
                   hintStyle: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: context.hintColor,
                     fontSize: 15,
                   ),
                   border: InputBorder.none,
@@ -380,6 +383,11 @@ class _AIHubScreenState extends State<AIHubScreen> {
   }
 
   Widget _buildAgentsView() {
+    // Filter agents based on selected category
+    final filteredAgents = _selectedAgentFilter == 0
+        ? _agents
+        : _agents.where((a) => a.category == _agentFilters[_selectedAgentFilter]).toList();
+
     return Column(
       children: [
         SizedBox(
@@ -390,6 +398,11 @@ class _AIHubScreenState extends State<AIHubScreen> {
             itemCount: _agentFilters.length,
             itemBuilder: (context, index) {
               final isSelected = _selectedAgentFilter == index;
+              // Count agents in each category
+              final count = index == 0
+                  ? _agents.length
+                  : _agents.where((a) => a.category == _agentFilters[index]).length;
+              
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: GestureDetector(
@@ -401,24 +414,48 @@ class _AIHubScreenState extends State<AIHubScreen> {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFF1A1A1F)
+                          ? const Color(0xFF06B6D4).withValues(alpha: 0.15)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isSelected
-                            ? Colors.white.withValues(alpha: 0.1)
-                            : Colors.transparent,
+                            ? const Color(0xFF06B6D4).withValues(alpha: 0.5)
+                            : context.dividerColor,
                       ),
                     ),
-                    child: Text(
-                      _agentFilters[index],
-                      style: TextStyle(
-                        color: isSelected
-                            ? const Color(0xFF3B82F6)
-                            : Colors.white.withValues(alpha: 0.4),
-                        fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                      ),
+                    child: Row(
+                      children: [
+                        Text(
+                          _agentFilters[index],
+                          style: TextStyle(
+                            color: isSelected
+                                ? const Color(0xFF06B6D4)
+                                : context.onSurfaceVariant,
+                            fontSize: 13,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFF06B6D4).withValues(alpha: 0.2)
+                                : context.onSurface.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '$count',
+                            style: TextStyle(
+                              color: isSelected
+                                  ? const Color(0xFF06B6D4)
+                                  : context.hintColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -427,16 +464,37 @@ class _AIHubScreenState extends State<AIHubScreen> {
           ),
         ),
         const SizedBox(height: 4),
-        Divider(color: Colors.white.withValues(alpha: 0.05), height: 1),
+        Divider(color: context.dividerColor, height: 1),
         const SizedBox(height: 16),
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-            itemCount: _agents.length,
-            itemBuilder: (context, index) {
-              return _AgentCard(item: _agents[index]);
-            },
-          ),
+          child: filteredAgents.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.smart_toy_outlined,
+                        size: 48,
+                        color: context.hintColor.withValues(alpha: 0.5),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No agents in this category',
+                        style: TextStyle(
+                          color: context.onSurfaceVariant,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                  itemCount: filteredAgents.length,
+                  itemBuilder: (context, index) {
+                    return _AgentCard(item: filteredAgents[index]);
+                  },
+                ),
         ),
       ],
     );
@@ -474,10 +532,10 @@ class _AgentCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F0F15),
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: context.dividerColor,
         ),
       ),
       child: Row(
@@ -514,8 +572,8 @@ class _AgentCard extends StatelessWidget {
                     Flexible(
                       child: Text(
                         item.title,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.onSurface,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -525,13 +583,13 @@ class _AgentCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
+                        color: context.onSurface.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         item.category,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: context.onSurfaceVariant,
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                         ),
@@ -543,7 +601,7 @@ class _AgentCard extends StatelessWidget {
                 Text(
                   item.description,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
+                    color: context.onSurfaceVariant.withValues(alpha: 0.8),
                     fontSize: 13,
                     height: 1.4,
                   ),
@@ -560,7 +618,7 @@ class _AgentCard extends StatelessWidget {
                     Text(
                       item.rating,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: context.onSurface,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -569,7 +627,7 @@ class _AgentCard extends StatelessWidget {
                     Text(
                       '${item.uses} uses',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: context.hintColor,
                         fontSize: 12,
                       ),
                     ),

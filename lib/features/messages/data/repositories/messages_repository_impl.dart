@@ -2,24 +2,30 @@ import 'dart:async';
 import '../../domain/entities/message.dart';
 import '../../domain/repositories/messages_repository.dart';
 import '../models/message_model.dart';
+import '../datasources/messages_remote_data_source.dart';
 
 class MessagesRepositoryImpl implements MessagesRepository {
   final bool useMockData;
+  final MessagesRemoteDataSource? remoteDataSource;
 
   final _newMessageController = StreamController<Message>.broadcast();
   final _messageUpdatedController = StreamController<Message>.broadcast();
   final _conversationUpdatedController = StreamController<Conversation>.broadcast();
   final Map<String, StreamController<TypingIndicator>> _typingControllers = {};
+  
+  List<Conversation>? _cachedConversations;
+  final Map<String, List<Message>> _cachedMessages = {};
 
-  MessagesRepositoryImpl({this.useMockData = true});
+  MessagesRepositoryImpl({this.useMockData = true, this.remoteDataSource});
 
   @override
   Future<List<Conversation>> getConversations({int page = 1, int limit = 20}) async {
     if (useMockData) {
       await Future.delayed(const Duration(milliseconds: 300));
-      return _getMockConversations();
+      _cachedConversations ??= _getMockConversations();
+      return _cachedConversations!;
     }
-    throw UnimplementedError();
+    return remoteDataSource!.getConversations();
   }
 
   @override
@@ -28,7 +34,7 @@ class MessagesRepositoryImpl implements MessagesRepository {
       final conversations = _getMockConversations();
       return conversations.firstWhere((c) => c.id == conversationId);
     }
-    throw UnimplementedError();
+    return remoteDataSource!.getConversationById(conversationId);
   }
 
   @override
@@ -43,8 +49,8 @@ class MessagesRepositoryImpl implements MessagesRepository {
         participants: [
           const ConversationParticipantModel(
             id: 'currentUser',
-            username: 'you',
-            displayName: 'You',
+            username: 'yazan_codes',
+            displayName: 'Yazan Al-Rashid',
           ),
         ],
         createdAt: DateTime.now(),
@@ -54,13 +60,16 @@ class MessagesRepositoryImpl implements MessagesRepository {
         groupImageUrl: groupImageUrl,
       );
     }
-    throw UnimplementedError();
+    return remoteDataSource!.createConversation(
+      participantIds: participantIds,
+      title: groupName,
+    );
   }
 
   @override
   Future<void> deleteConversation(String conversationId) async {
     if (useMockData) return;
-    throw UnimplementedError();
+    await remoteDataSource!.deleteConversation(conversationId);
   }
 
   @override
@@ -72,9 +81,10 @@ class MessagesRepositoryImpl implements MessagesRepository {
   }) async {
     if (useMockData) {
       await Future.delayed(const Duration(milliseconds: 200));
-      return _getMockMessages(conversationId);
+      _cachedMessages[conversationId] ??= _getMockMessages(conversationId);
+      return _cachedMessages[conversationId]!;
     }
-    throw UnimplementedError();
+    return remoteDataSource!.getMessages(conversationId);
   }
 
   @override
@@ -91,7 +101,7 @@ class MessagesRepositoryImpl implements MessagesRepository {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         conversationId: conversationId,
         senderId: 'currentUser',
-        senderName: 'You',
+        senderName: 'Yazan Al-Rashid',
         content: content,
         type: type,
         mediaUrls: mediaUrls ?? [],
@@ -99,28 +109,60 @@ class MessagesRepositoryImpl implements MessagesRepository {
         createdAt: DateTime.now(),
         replyToMessageId: replyToMessageId,
       );
+      
+      _cachedMessages[conversationId] ??= [];
+      _cachedMessages[conversationId]!.add(message);
+      
+      if (_cachedConversations != null) {
+        final index = _cachedConversations!.indexWhere((c) => c.id == conversationId);
+        if (index >= 0) {
+          _cachedConversations![index] = _cachedConversations![index].copyWith(
+            lastMessage: message,
+            updatedAt: message.createdAt,
+          );
+        }
+      }
+      
       _newMessageController.add(message);
       return message;
     }
-    throw UnimplementedError();
+    return remoteDataSource!.sendMessage(
+      conversationId: conversationId,
+      content: content ?? '',
+      type: type,
+    );
   }
 
   @override
   Future<void> deleteMessage(String conversationId, String messageId) async {
     if (useMockData) return;
-    throw UnimplementedError();
+    await remoteDataSource!.deleteMessage(messageId);
+  }
+
+  @override
+  Future<void> deleteMultipleMessages(String conversationId, List<String> messageIds) async {
+    if (useMockData) return;
+    for (final id in messageIds) {
+      await remoteDataSource!.deleteMessage(id);
+    }
+  }
+
+  @override
+  Future<void> clearConversationForMe(String conversationId) async {
+    if (useMockData) return;
+    // No direct API for clear conversation
   }
 
   @override
   Future<void> markAsRead(String conversationId, String messageId) async {
     if (useMockData) return;
-    throw UnimplementedError();
+    await remoteDataSource!.markMessageAsRead(messageId);
   }
 
   @override
   Future<void> markConversationAsRead(String conversationId) async {
     if (useMockData) return;
-    throw UnimplementedError();
+    // Mark all messages in conversation as read
   }
 
   @override
@@ -131,7 +173,7 @@ class MessagesRepositoryImpl implements MessagesRepository {
   @override
   Future<void> removeReaction(String messageId, String emoji) async {
     if (useMockData) return;
-    throw UnimplementedError();
+    // No direct API for remove reaction
   }
 
   @override
@@ -168,7 +210,8 @@ class MessagesRepositoryImpl implements MessagesRepository {
           p.username.toLowerCase().contains(query.toLowerCase())
         );
         final groupMatch = c.groupName?.toLowerCase().contains(query.toLowerCase()) ?? false;
-        return participantMatch || groupMatch;
+        final messageMatch = c.lastMessage?.content?.toLowerCase().contains(query.toLowerCase()) ?? false;
+        return participantMatch || groupMatch || messageMatch;
       }).toList();
     }
     throw UnimplementedError();
@@ -197,13 +240,13 @@ class MessagesRepositoryImpl implements MessagesRepository {
   @override
   Future<void> startTyping(String conversationId) async {
     if (useMockData) return;
-    throw UnimplementedError();
+    // Typing indicator handled client-side
   }
 
   @override
   Future<void> stopTyping(String conversationId) async {
     if (useMockData) return;
-    throw UnimplementedError();
+    // Typing indicator handled client-side
   }
 
   @override
@@ -219,9 +262,9 @@ class MessagesRepositoryImpl implements MessagesRepository {
         participants: const [
           ConversationParticipantModel(
             id: 'user1',
-            username: 'sarahj',
-            displayName: 'Sarah Johnson',
-            avatarUrl: 'https://images.unsplash.com/photo-1494790108755-cbb6b1809933?w=150',
+            username: 'layla_design',
+            displayName: 'Layla Ahmed',
+            avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
             isVerified: true,
             isOnline: true,
           ),
@@ -230,25 +273,25 @@ class MessagesRepositoryImpl implements MessagesRepository {
           id: 'm1',
           conversationId: 'conv1',
           senderId: 'user1',
-          senderName: 'Sarah Johnson',
-          content: 'Hey! How are you doing?',
+          senderName: 'Layla Ahmed',
+          content: 'The new design looks amazing! 🔥',
           type: MessageType.text,
           status: MessageStatus.delivered,
-          createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
+          createdAt: DateTime.now().subtract(const Duration(minutes: 2)),
         ),
-        unreadCount: 2,
-        createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        updatedAt: DateTime.now().subtract(const Duration(minutes: 5)),
+        unreadCount: 3,
+        createdAt: DateTime.now().subtract(const Duration(days: 14)),
+        updatedAt: DateTime.now().subtract(const Duration(minutes: 2)),
       ),
       ConversationModel(
         id: 'conv2',
         participants: const [
           ConversationParticipantModel(
             id: 'user2',
-            username: 'alexr',
-            displayName: 'Alex Rivera',
-            avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-            isOnline: false,
+            username: 'omar_tech',
+            displayName: 'Omar Hassan',
+            avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150',
+            isOnline: true,
           ),
         ],
         lastMessage: MessageModel(
@@ -256,49 +299,103 @@ class MessagesRepositoryImpl implements MessagesRepository {
           conversationId: 'conv2',
           senderId: 'currentUser',
           senderName: 'You',
-          content: 'Sure, let me check and get back to you',
+          content: 'I\'ll send you the files tonight',
           type: MessageType.text,
           status: MessageStatus.read,
-          createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+          createdAt: DateTime.now().subtract(const Duration(hours: 1)),
         ),
         unreadCount: 0,
-        createdAt: DateTime.now().subtract(const Duration(days: 15)),
-        updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
+        createdAt: DateTime.now().subtract(const Duration(days: 7)),
+        updatedAt: DateTime.now().subtract(const Duration(hours: 1)),
       ),
       ConversationModel(
         id: 'conv3',
         participants: const [
           ConversationParticipantModel(
             id: 'user3',
-            username: 'mikec',
-            displayName: 'Mike Chen',
-            avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-            isOnline: true,
-          ),
-          ConversationParticipantModel(
-            id: 'user4',
-            username: 'emilyd',
-            displayName: 'Emily Davis',
-            avatarUrl: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150',
+            username: 'sara_flutter',
+            displayName: 'Sara Mahmoud',
+            avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
             isVerified: true,
+            isOnline: false,
           ),
         ],
-        groupName: 'Project Team',
-        isGroup: true,
         lastMessage: MessageModel(
           id: 'm3',
           conversationId: 'conv3',
           senderId: 'user3',
-          senderName: 'Mike Chen',
-          content: 'The meeting is scheduled for tomorrow at 2 PM',
+          senderName: 'Sara Mahmoud',
+          content: 'Can we schedule a call tomorrow?',
           type: MessageType.text,
           status: MessageStatus.delivered,
-          createdAt: DateTime.now().subtract(const Duration(hours: 5)),
+          createdAt: DateTime.now().subtract(const Duration(hours: 3)),
         ),
-        unreadCount: 5,
-        createdAt: DateTime.now().subtract(const Duration(days: 60)),
-        updatedAt: DateTime.now().subtract(const Duration(hours: 5)),
+        unreadCount: 1,
+        createdAt: DateTime.now().subtract(const Duration(days: 21)),
+        updatedAt: DateTime.now().subtract(const Duration(hours: 3)),
         isPinned: true,
+      ),
+      ConversationModel(
+        id: 'conv4',
+        participants: const [
+          ConversationParticipantModel(
+            id: 'user4',
+            username: 'ahmed_dev',
+            displayName: 'Ahmed Khaled',
+            avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+            isOnline: true,
+          ),
+          ConversationParticipantModel(
+            id: 'user5',
+            username: 'nour_pm',
+            displayName: 'Nour Ali',
+            avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150',
+            isVerified: true,
+          ),
+        ],
+        groupName: 'U-AXIS Team',
+        groupImageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=150',
+        isGroup: true,
+        lastMessage: MessageModel(
+          id: 'm4',
+          conversationId: 'conv4',
+          senderId: 'user4',
+          senderName: 'Ahmed Khaled',
+          content: 'Sprint review meeting in 30 min!',
+          type: MessageType.text,
+          status: MessageStatus.delivered,
+          createdAt: DateTime.now().subtract(const Duration(minutes: 45)),
+        ),
+        unreadCount: 8,
+        createdAt: DateTime.now().subtract(const Duration(days: 60)),
+        updatedAt: DateTime.now().subtract(const Duration(minutes: 45)),
+        isPinned: true,
+      ),
+      ConversationModel(
+        id: 'conv5',
+        participants: const [
+          ConversationParticipantModel(
+            id: 'user6',
+            username: 'maya_ui',
+            displayName: 'Maya Ibrahim',
+            avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
+            isOnline: false,
+          ),
+        ],
+        lastMessage: MessageModel(
+          id: 'm5',
+          conversationId: 'conv5',
+          senderId: 'user6',
+          senderName: 'Maya Ibrahim',
+          content: 'Thanks for the feedback! 💜',
+          type: MessageType.text,
+          status: MessageStatus.read,
+          createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        ),
+        unreadCount: 0,
+        createdAt: DateTime.now().subtract(const Duration(days: 30)),
+        updatedAt: DateTime.now().subtract(const Duration(days: 1)),
+        isMuted: true,
       ),
     ];
   }
@@ -309,54 +406,96 @@ class MessagesRepositoryImpl implements MessagesRepository {
         id: 'msg1',
         conversationId: conversationId,
         senderId: 'user1',
-        senderName: 'Sarah Johnson',
-        senderAvatarUrl: 'https://images.unsplash.com/photo-1494790108755-cbb6b1809933?w=150',
-        content: 'Hey! How are you doing?',
+        senderName: 'Layla Ahmed',
+        senderAvatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        content: 'Hey! I saw your latest work on the app 👀',
         type: MessageType.text,
         status: MessageStatus.read,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
+        createdAt: DateTime.now().subtract(const Duration(minutes: 45)),
       ),
       MessageModel(
         id: 'msg2',
         conversationId: conversationId,
         senderId: 'currentUser',
         senderName: 'You',
-        content: 'I\'m good! Just finished working on the new project.',
+        content: 'Thanks! Been working on it all week. What do you think?',
         type: MessageType.text,
         status: MessageStatus.read,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 25)),
+        createdAt: DateTime.now().subtract(const Duration(minutes: 40)),
       ),
       MessageModel(
         id: 'msg3',
         conversationId: conversationId,
         senderId: 'user1',
-        senderName: 'Sarah Johnson',
-        senderAvatarUrl: 'https://images.unsplash.com/photo-1494790108755-cbb6b1809933?w=150',
-        content: 'That sounds great! Can you tell me more about it?',
+        senderName: 'Layla Ahmed',
+        senderAvatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        content: 'The chat bubbles look so clean now! Love the emerald color scheme 💚',
         type: MessageType.text,
         status: MessageStatus.read,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 20)),
+        createdAt: DateTime.now().subtract(const Duration(minutes: 35)),
       ),
       MessageModel(
         id: 'msg4',
         conversationId: conversationId,
         senderId: 'currentUser',
         senderName: 'You',
-        content: 'Sure! It\'s a social media app with some really cool features.',
+        content: 'Right?! The gradient makes it pop. Also added smooth transitions between screens.',
         type: MessageType.text,
-        status: MessageStatus.delivered,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
+        status: MessageStatus.read,
+        createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
       ),
       MessageModel(
         id: 'msg5',
         conversationId: conversationId,
         senderId: 'user1',
-        senderName: 'Sarah Johnson',
-        senderAvatarUrl: 'https://images.unsplash.com/photo-1494790108755-cbb6b1809933?w=150',
-        content: '🎉 Wow, that\'s amazing!',
+        senderName: 'Layla Ahmed',
+        senderAvatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        content: 'The navigation is so much smoother now. Great work on the MotionPageRoute implementation!',
+        type: MessageType.text,
+        status: MessageStatus.read,
+        createdAt: DateTime.now().subtract(const Duration(minutes: 20)),
+      ),
+      MessageModel(
+        id: 'msg6',
+        conversationId: conversationId,
+        senderId: 'currentUser',
+        senderName: 'You',
+        content: 'Thanks! Used easeOutCubic for that snappy feel 🚀',
+        type: MessageType.text,
+        status: MessageStatus.delivered,
+        createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
+      ),
+      MessageModel(
+        id: 'msg7',
+        conversationId: conversationId,
+        senderId: 'user1',
+        senderName: 'Layla Ahmed',
+        senderAvatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        content: 'The profile screen loading is much better too. That skeleton animation is chef\'s kiss 👨‍🍳✨',
+        type: MessageType.text,
+        status: MessageStatus.delivered,
+        createdAt: DateTime.now().subtract(const Duration(minutes: 8)),
+      ),
+      MessageModel(
+        id: 'msg8',
+        conversationId: conversationId,
+        senderId: 'currentUser',
+        senderName: 'You',
+        content: 'Shimmer loading FTW! Way better than a boring spinner',
         type: MessageType.text,
         status: MessageStatus.delivered,
         createdAt: DateTime.now().subtract(const Duration(minutes: 5)),
+      ),
+      MessageModel(
+        id: 'msg9',
+        conversationId: conversationId,
+        senderId: 'user1',
+        senderName: 'Layla Ahmed',
+        senderAvatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        content: 'The new design looks amazing! 🔥',
+        type: MessageType.text,
+        status: MessageStatus.delivered,
+        createdAt: DateTime.now().subtract(const Duration(minutes: 2)),
       ),
     ];
   }

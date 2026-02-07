@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../app/theme/theme_extensions.dart';
 
 class RippleConfig {
   final int rippleCount;
   final Duration totalDuration;
   final double rippleStrokeWidth;
-  final Color rippleColor;
+  final Color? rippleColor;
   final double maxRippleRadius;
   final double staggerFraction;
 
@@ -13,7 +14,7 @@ class RippleConfig {
     this.rippleCount = 4,
     this.totalDuration = const Duration(milliseconds: 3000),
     this.rippleStrokeWidth = 1.5,
-    this.rippleColor = Colors.white,
+    this.rippleColor,
     this.maxRippleRadius = 200.0,
     this.staggerFraction = 0.25,
   });
@@ -95,7 +96,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: context.scaffoldBg,
       body: Stack(
         children: [
           Center(
@@ -110,6 +111,7 @@ class _SplashScreenState extends State<SplashScreen>
                   painter: _RipplePainter(
                     progress: _rippleController.value,
                     config: widget.config,
+                    resolvedRippleColor: widget.config.rippleColor ?? context.onSurface,
                   ),
                 );
               },
@@ -135,10 +137,10 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Widget _buildDefaultLogo() {
-    return const Text(
+    return Text(
       'U-AXIS',
       style: TextStyle(
-        color: Colors.white,
+        color: context.onSurface,
         fontSize: 42,
         fontWeight: FontWeight.w300,
         letterSpacing: 16,
@@ -150,10 +152,12 @@ class _SplashScreenState extends State<SplashScreen>
 class _RipplePainter extends CustomPainter {
   final double progress;
   final RippleConfig config;
+  final Color resolvedRippleColor;
 
   _RipplePainter({
     required this.progress,
     required this.config,
+    required this.resolvedRippleColor,
   });
 
   @override
@@ -172,7 +176,7 @@ class _RipplePainter extends CustomPainter {
 
       if (opacity > 0 && radius > 0) {
         final paint = Paint()
-          ..color = config.rippleColor.withValues(alpha: opacity)
+          ..color = resolvedRippleColor.withValues(alpha: opacity)
           ..style = PaintingStyle.stroke
           ..strokeWidth = config.rippleStrokeWidth * (1.0 - curvedProgress * 0.5);
 
@@ -183,6 +187,6 @@ class _RipplePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _RipplePainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress || oldDelegate.resolvedRippleColor != resolvedRippleColor;
   }
 }

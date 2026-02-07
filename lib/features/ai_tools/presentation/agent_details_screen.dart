@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../app/theme/theme_extensions.dart';
 
 class AgentDetailsScreen extends StatelessWidget {
   final String title;
@@ -24,13 +25,13 @@ class AgentDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: context.scaffoldBg,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             backgroundColor: Colors.transparent,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: Icon(Icons.arrow_back, color: context.onSurface),
               onPressed: () => context.pop(),
             ),
             expandedHeight: 0,
@@ -40,9 +41,9 @@ class AgentDetailsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(),
-                _buildStats(),
-                _buildCapabilities(),
+                _buildHeader(context),
+                _buildStats(context),
+                _buildCapabilities(context),
                 const SizedBox(height: 24),
                 _buildSubscriptionPlans(context),
                 const SizedBox(height: 40),
@@ -51,11 +52,11 @@ class AgentDetailsScreen extends StatelessWidget {
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomBar(),
+      bottomNavigationBar: _buildBottomBar(context),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       margin: const EdgeInsets.all(20),
       padding: const EdgeInsets.all(24),
@@ -142,12 +143,13 @@ class AgentDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStats() {
+  Widget _buildStats(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
           _buildStatCard(
+            context,
             Icons.bolt, 
             'Lightning Fast', 
             '< 2s response',
@@ -155,6 +157,7 @@ class AgentDetailsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           _buildStatCard(
+            context,
             Icons.group, 
             'Active Users', 
             '12.5K+',
@@ -162,6 +165,7 @@ class AgentDetailsScreen extends StatelessWidget {
           ),
            const SizedBox(height: 12),
           _buildStatCard(
+            context,
             Icons.show_chart, 
             'Accuracy', 
             '99.2%',
@@ -172,13 +176,13 @@ class AgentDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildStatCard(IconData icon, String label, String value, Color color) {
+  Widget _buildStatCard(BuildContext context, IconData icon, String label, String value, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1F),
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(color: context.dividerColor),
       ),
       child: Row(
         children: [
@@ -190,15 +194,15 @@ class AgentDetailsScreen extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
+                  color: context.onSurfaceVariant,
                   fontSize: 12,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.onSurface,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -210,7 +214,7 @@ class AgentDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildCapabilities() {
+  Widget _buildCapabilities(BuildContext context) {
     final capabilities = [
       'Multi-language content generation',
       'SEO optimization',
@@ -225,10 +229,10 @@ class AgentDetailsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Capabilities',
             style: TextStyle(
-              color: Colors.white,
+              color: context.onSurface,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -250,7 +254,7 @@ class AgentDetailsScreen extends StatelessWidget {
                 Text(
                   cap,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
+                    color: context.onSurface.withValues(alpha: 0.9),
                     fontSize: 14,
                   ),
                 ),
@@ -268,10 +272,10 @@ class AgentDetailsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Subscription Plans',
             style: TextStyle(
-              color: Colors.white,
+              color: context.onSurface,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -337,17 +341,17 @@ class AgentDetailsScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: isPopular ? const Color(0xFF6366F1) : const Color(0xFF1A1A1F),
+            color: isPopular ? const Color(0xFF6366F1) : context.cardColor,
             borderRadius: BorderRadius.circular(24),
-            border: isPopular ? null : Border.all(color: Colors.white.withValues(alpha: 0.05)),
+            border: isPopular ? null : Border.all(color: context.dividerColor),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 planTitle,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: isPopular ? Colors.white : context.onSurface,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -358,8 +362,8 @@ class AgentDetailsScreen extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: planPrice,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: isPopular ? Colors.white : context.onSurface,
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                       ),
@@ -367,7 +371,7 @@ class AgentDetailsScreen extends StatelessWidget {
                     TextSpan(
                       text: '/month',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: isPopular ? Colors.white.withValues(alpha: 0.7) : context.onSurfaceVariant,
                         fontSize: 14,
                       ),
                     ),
@@ -377,7 +381,7 @@ class AgentDetailsScreen extends StatelessWidget {
               Text(
                 limit,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
+                  color: isPopular ? Colors.white.withValues(alpha: 0.5) : context.hintColor,
                   fontSize: 12,
                 ),
               ),
@@ -388,17 +392,17 @@ class AgentDetailsScreen extends StatelessWidget {
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                         color: Colors.white.withValues(alpha: 0.2),
+                         color: isPopular ? Colors.white.withValues(alpha: 0.2) : context.dividerColor,
                          shape: BoxShape.circle,
                       ),
                       padding: const EdgeInsets.all(4),
-                      child: const Icon(Icons.check, size: 10, color: Colors.white),
+                      child: Icon(Icons.check, size: 10, color: isPopular ? Colors.white : context.iconColor),
                     ),
                     const SizedBox(width: 12),
                     Text(
                       feature,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: isPopular ? Colors.white : context.onSurface,
                         fontSize: 14,
                       ),
                     ),
@@ -419,8 +423,8 @@ class AgentDetailsScreen extends StatelessWidget {
                     });
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isPopular ? const Color(0xFF8B5CF6) : const Color(0xFF2D2D35),
-                    foregroundColor: Colors.white,
+                    backgroundColor: isPopular ? const Color(0xFF8B5CF6) : context.onSurface.withValues(alpha: 0.1),
+                    foregroundColor: isPopular ? Colors.white : context.onSurface,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -464,12 +468,12 @@ class AgentDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomBar() {
+  Widget _buildBottomBar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F1115),
-        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+        color: context.cardColor,
+        border: Border(top: BorderSide(color: context.dividerColor)),
       ),
       child: SafeArea(
         child: Row(
@@ -496,8 +500,8 @@ class AgentDetailsScreen extends StatelessWidget {
                 icon: const Icon(Icons.settings_outlined),
                 label: const Text('Configure'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                  foregroundColor: context.onSurface,
+                  side: BorderSide(color: context.dividerColor),
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

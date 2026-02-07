@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/trust_score.dart';
+import '../../app/theme/theme_extensions.dart';
 
 class TrustBadge extends StatelessWidget {
   final int score;
@@ -132,12 +133,12 @@ class TrustLevelCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF141418),
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isSelected
               ? trust.primaryColor
-              : Colors.white.withValues(alpha: 0.08),
+              : context.dividerColor,
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -160,8 +161,8 @@ class TrustLevelCard extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             trust.levelName,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.onSurface,
               fontSize: 16,
               fontWeight: FontWeight.w700,
             ),
@@ -190,7 +191,7 @@ class TrustLevelCard extends StatelessWidget {
                       child: Text(
                         benefit,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
+                          color: context.onSurface.withValues(alpha: 0.7),
                           fontSize: 12,
                         ),
                       ),
@@ -229,12 +230,12 @@ class SearchResultCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF141418),
+        color: context.cardColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: trust.isTopRanked
               ? trust.primaryColor.withValues(alpha: 0.3)
-              : Colors.white.withValues(alpha: 0.08),
+              : context.dividerColor,
         ),
       ),
       child: Column(
@@ -273,7 +274,7 @@ class SearchResultCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: Colors.grey[800],
+                  color: context.scaffoldBg,
                   borderRadius: BorderRadius.circular(12),
                   image: imageUrl != null
                       ? DecorationImage(
@@ -285,7 +286,7 @@ class SearchResultCard extends StatelessWidget {
                 child: imageUrl == null
                     ? Icon(
                         Icons.person,
-                        color: Colors.white.withValues(alpha: 0.5),
+                        color: context.iconColor.withValues(alpha: 0.5),
                       )
                     : null,
               ),
@@ -299,8 +300,8 @@ class SearchResultCard extends StatelessWidget {
                         Flexible(
                           child: Text(
                             name,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: context.onSurface,
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
                             ),
@@ -337,7 +338,7 @@ class SearchResultCard extends StatelessWidget {
                         Text(
                           '($reviewCount reviews)',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
+                            color: context.hintColor,
                             fontSize: 11,
                           ),
                         ),
@@ -371,10 +372,10 @@ class TrustLevelsGrid extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Trust Levels & Benefits',
           style: TextStyle(
-            color: Colors.white,
+            color: context.onSurface,
             fontSize: 20,
             fontWeight: FontWeight.w700,
           ),
@@ -407,10 +408,10 @@ class SearchResultsRanking extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Search Results Ranking',
           style: TextStyle(
-            color: Colors.white,
+            color: context.onSurface,
             fontSize: 20,
             fontWeight: FontWeight.w700,
           ),

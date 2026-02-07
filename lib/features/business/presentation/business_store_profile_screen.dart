@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/widgets/universe_back_button.dart';
 import '../../../core/widgets/uaxis_drawer.dart';
+import '../../../app/theme/theme_extensions.dart';
 
 class BusinessStoreProfileScreen extends StatelessWidget {
   final String storeId;
@@ -26,13 +27,13 @@ class BusinessStoreProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0A),
+      backgroundColor: context.scaffoldBg,
       drawer: UAxisDrawer(),
       body: Stack(
         children: [
           CustomScrollView(
             slivers: [
-              SliverToBoxAdapter(child: _buildHeader()),
+              SliverToBoxAdapter(child: _buildHeader(context)),
               SliverToBoxAdapter(child: _buildInfoRow(context)),
               SliverToBoxAdapter(child: _buildFeaturedProducts(context)),
               const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -49,19 +50,17 @@ class BusinessStoreProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Container(
       height: 220,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF0D3D2E),
-            Color(0xFF1A6B4A),
-            Color(0xFF0A0A0A),
-          ],
-          stops: [0.0, 0.5, 1.0],
+          colors: context.isDarkMode 
+              ? [const Color(0xFF0D3D2E), const Color(0xFF1A6B4A), context.scaffoldBg]
+              : [const Color(0xFF10B981), const Color(0xFF34D399), context.scaffoldBg],
+          stops: const [0.0, 0.5, 1.0],
         ),
       ),
       child: SafeArea(
@@ -72,11 +71,11 @@ class BusinessStoreProfileScreen extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: context.cardColor,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),
@@ -101,8 +100,8 @@ class BusinessStoreProfileScreen extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               storeDescription,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.7),
+              style: const TextStyle(
+                color: Colors.white70,
                 fontSize: 14,
               ),
             ),
@@ -130,8 +129,8 @@ class BusinessStoreProfileScreen extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 rating.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: context.onSurface,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -141,7 +140,7 @@ class BusinessStoreProfileScreen extends StatelessWidget {
                 child: Text(
                   '($reviewCount reviews)',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: context.hintColor,
                     fontSize: 12,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -154,7 +153,7 @@ class BusinessStoreProfileScreen extends StatelessWidget {
             children: [
               Icon(
                 Icons.location_on_outlined,
-                color: Colors.white.withValues(alpha: 0.5),
+                color: context.iconColor.withValues(alpha: 0.5),
                 size: 14,
               ),
               const SizedBox(width: 4),
@@ -162,7 +161,7 @@ class BusinessStoreProfileScreen extends StatelessWidget {
                 child: Text(
                   location,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: context.onSurface.withValues(alpha: 0.7),
                     fontSize: 11,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -171,7 +170,7 @@ class BusinessStoreProfileScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Icon(
                 Icons.access_time_outlined,
-                color: Colors.white.withValues(alpha: 0.5),
+                color: context.iconColor.withValues(alpha: 0.5),
                 size: 14,
               ),
               const SizedBox(width: 4),
@@ -179,7 +178,7 @@ class BusinessStoreProfileScreen extends StatelessWidget {
                 child: Text(
                   hours,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
+                    color: context.onSurface.withValues(alpha: 0.7),
                     fontSize: 11,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -192,6 +191,7 @@ class BusinessStoreProfileScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: _buildOutlineButton(
+                  context,
                   label: 'Contact',
                   onTap: () {},
                 ),
@@ -210,7 +210,8 @@ class BusinessStoreProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOutlineButton({
+  Widget _buildOutlineButton(
+    BuildContext context, {
     required String label,
     required VoidCallback onTap,
   }) {
@@ -221,7 +222,7 @@ class BusinessStoreProfileScreen extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.3),
+            color: context.dividerColor,
           ),
         ),
         child: Row(
@@ -229,14 +230,14 @@ class BusinessStoreProfileScreen extends StatelessWidget {
           children: [
             Icon(
               Icons.phone_outlined,
-              color: Colors.white.withValues(alpha: 0.8),
+              color: context.iconColor,
               size: 16,
             ),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: context.onSurface,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -288,10 +289,10 @@ class BusinessStoreProfileScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Featured Products',
             style: TextStyle(
-              color: Colors.white,
+              color: context.onSurface,
               fontSize: 18,
               fontWeight: FontWeight.w700,
             ),
@@ -351,10 +352,10 @@ class _ProductCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF141418),
+          color: context.cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.08),
+            color: context.dividerColor,
           ),
         ),
         child: Column(
@@ -380,8 +381,8 @@ class _ProductCard extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: context.onSurface,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -400,7 +401,7 @@ class _ProductCard extends StatelessWidget {
                       Text(
                         '$rating ($reviewCount)',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: context.onSurface.withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                       ),

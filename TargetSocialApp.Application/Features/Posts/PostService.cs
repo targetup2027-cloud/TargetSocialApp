@@ -19,19 +19,22 @@ namespace TargetSocialApp.Application.Features.Posts
         private readonly IGenericRepository<PostReaction> _reactionRepository;
         private readonly IGenericRepository<SavedPost> _savedPostRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IFileService _fileService;
 
         public PostService(
             IGenericRepository<Post> postRepository,
             IGenericRepository<User> userRepository,
             IGenericRepository<PostReaction> reactionRepository,
             IGenericRepository<SavedPost> savedPostRepository,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            IFileService fileService)
         {
             _postRepository = postRepository;
             _userRepository = userRepository;
             _reactionRepository = reactionRepository;
             _savedPostRepository = savedPostRepository;
             _unitOfWork = unitOfWork;
+            _fileService = fileService;
         }
 
         public async Task<Response<PostDto>> CreatePostAsync(int userId, CreatePostRequest request)
@@ -94,6 +97,10 @@ namespace TargetSocialApp.Application.Features.Posts
         private IQueryable<PostDto> GetBaseQuery()
         {
             return _postRepository.GetTableNoTracking()
+                .Include(p => p.User)
+                .Include(p => p.Media)
+                .Include(p => p.Reactions)
+                .Include(p => p.Comments)
                 .Select(p => new PostDto
                 {
                     Id = p.Id,
@@ -325,7 +332,7 @@ namespace TargetSocialApp.Application.Features.Posts
 
         public async Task<Response<string>> UploadMediaAsync(UploadPostMediaRequest request)
         {
-            var url = await UploadImageAsync(request.File, "posts");
+            var url = await _fileService.UploadFileAsync(request.File, "posts");
             return Response<string>.Success(url);
         }
     }

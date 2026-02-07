@@ -30,6 +30,12 @@ namespace TargetSocialApp.Infrastructure
             // 2️⃣ Services
             services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddTransient<IUnitOfWork, UnitOfWork>();
+            
+            // 3️⃣ Infrastructure Services
+            services.AddTransient<IPasswordHasher, Services.PasswordHasher>();
+            services.AddTransient<ITokenService, Services.TokenService>();
+            services.AddTransient<ISmsService, Services.SmsService>();
+            services.AddTransient<IFileService, Services.FileService>();
 
             return services;
         }

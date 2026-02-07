@@ -2,20 +2,20 @@ using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Moq;
-using System.Linq.Expressions;
 using TargetSocialApp.Application.Common.Interfaces;
 using TargetSocialApp.Application.Features.Auth;
 using TargetSocialApp.Application.Features.Auth.Requests;
+using TargetSocialApp.Application.Features.Auth.Responses;
 using TargetSocialApp.Domain.Entities;
+using TargetSocialApp.Domain.Common;
 using Xunit;
 
 namespace TargetSocialApp.Tests.Features.Auth
 {
-    public class AuthServiceTests
+    public class AuthServiceTests : IDisposable
     {
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<IGenericRepository<User>> _mockUserRepository;
@@ -23,6 +23,16 @@ namespace TargetSocialApp.Tests.Features.Auth
         private readonly Mock<IValidator<LoginRequest>> _mockLoginValidator;
         private readonly Mock<IConfiguration> _mockConfiguration;
         private readonly Mock<IMemoryCache> _mockCache;
+        private readonly Mock<IPasswordHasher> _mockPasswordHasher;
+        private readonly Mock<ITokenService> _mockTokenService;
+        private readonly Mock<ISmsService> _mockSmsService;
+        
+        private readonly DbContextOptions<DbContext> _dbOptions; // Assuming DbContext is available or can be mocked via generic DbContextOptions if using generic context
+        private readonly DbContext _dbContext; // Need a concrete DbContext to get DbSet from InMemory
+        // Wait, TargetSocialApp.Infrastructure usually has ApplicationDbContext.
+        // If I don't want to depend on Infrastructure, can passed DbContext work?
+        // Actually, just creating a simple DbContext is enough.
+
         private readonly AuthService _authService;
 
         public AuthServiceTests()
@@ -33,6 +43,29 @@ namespace TargetSocialApp.Tests.Features.Auth
             _mockLoginValidator = new Mock<IValidator<LoginRequest>>();
             _mockConfiguration = new Mock<IConfiguration>();
             _mockCache = new Mock<IMemoryCache>();
+            _mockPasswordHasher = new Mock<IPasswordHasher>();
+            _mockTokenService = new Mock<ITokenService>();
+            _mockSmsService = new Mock<ISmsService>();
+
+            // Setup InMemory DB for async queryable mocking
+            // Just use a temporary DbContext to get a DbSet that supports async
+            var options = new DbContextOptionsBuilder<AuthTestDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+            var context = new AuthTestDbContext(options);
+            _dbContext = context;
+            _dbContext.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+
+            SetupRepositoryMock(_mockUserRepository);
+
+            // Default Setup for validation
+            _mockRegisterValidator.SetReturnsDefault(Task.FromResult(new ValidationResult()));
+            _mockRegisterValidator.Setup(v => v.ValidateAsync(It.IsAny<IValidationContext>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
+            
+            _mockLoginValidator.SetReturnsDefault(Task.FromResult(new ValidationResult()));
+            _mockLoginValidator.Setup(v => v.ValidateAsync(It.IsAny<IValidationContext>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ValidationResult());
 
             _authService = new AuthService(
                 _mockUnitOfWork.Object,
@@ -40,8 +73,51 @@ namespace TargetSocialApp.Tests.Features.Auth
                 _mockRegisterValidator.Object,
                 _mockLoginValidator.Object,
                 _mockConfiguration.Object,
-                _mockCache.Object
+                _mockCache.Object,
+                _mockPasswordHasher.Object,
+                _mockTokenService.Object,
+                _mockSmsService.Object
             );
+        }
+
+        private void SetupRepositoryMock<T>(Mock<IGenericRepository<T>> mockRepo) where T : BaseEntity
+        {
+            mockRepo.Setup(x => x.GetTableNoTracking()).Returns(() => _dbContext.Set<T>().AsNoTracking());
+            mockRepo.Setup(x => x.GetTableAsTracking()).Returns(() => _dbContext.Set<T>());
+            
+            mockRepo.Setup(x => x.AddAsync(It.IsAny<T>())).Returns(async (T entity) => {
+                _dbContext.Set<T>().Add(entity);
+                await _dbContext.SaveChangesAsync();
+                _dbContext.ChangeTracker.Clear();
+                return entity;
+            });
+            mockRepo.Setup(x => x.UpdateAsync(It.IsAny<T>())).Returns(async (T entity) => {
+                _dbContext.Set<T>().Update(entity);
+                await _dbContext.SaveChangesAsync();
+                _dbContext.ChangeTracker.Clear();
+            });
+            mockRepo.Setup(x => x.DeleteAsync(It.IsAny<T>())).Returns(async (T entity) => {
+                _dbContext.Set<T>().Remove(entity);
+                await _dbContext.SaveChangesAsync();
+                _dbContext.ChangeTracker.Clear();
+            });
+            mockRepo.Setup(x => x.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((int id) => _dbContext.Set<T>().Find(id));
+        }
+
+        public void Dispose()
+        {
+            _dbContext.Dispose();
+        }
+
+        // Helper to setup mock repo with data
+        private void SetupRepositoryData(IEnumerable<User> users)
+        {
+            if (users.Any())
+            {
+                _dbContext.Set<User>().AddRange(users);
+                _dbContext.SaveChanges();
+                _dbContext.ChangeTracker.Clear();
+            }
         }
 
         [Fact]
@@ -56,39 +132,8 @@ namespace TargetSocialApp.Tests.Features.Auth
                 LastName = "User"
             };
 
-            // Validation passes
-            // Validation passes (Broad setup to catch extension method wrapping)
-            _mockRegisterValidator.SetReturnsDefault(Task.FromResult(new ValidationResult()));
-            _mockRegisterValidator
-                .Setup(v => v.ValidateAsync(It.IsAny<IValidationContext>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new ValidationResult());
-
-            // User does not exist (Mocking IQueryable is tricky, assuming InMemory might be better or simple mock if repository returns IQueryable directly)
-            // Ideally GenericRepository returns IQueryable which we can mock with a List
-            var users = new List<User>().AsQueryable();
-            
-            // Note: Mocking DbSet extensions like FirstOrDefaultAsync is complex with just Moq.
-            // For pure unit testing without EF dependencies, usually we wrap the query logic or use an InMemory DB provider for the repository.
-            // However, since the service calls GetTableNoTracking() which returns IQueryable, implementing a full Async Query Provider mock is verbose.
-            // A simpler approach for the Unit test of Logic vs EF is to assume specific behavior or Refactor the Service to use `GetUserByEmail` method instead of direct LINQ.
-            // But adhering to "Don't change code just for testing" initially:
-            
-            // Standard Moq setup for Async Enumerables is required here.
-            // To avoid complexity in this first test, let's verify if we can start with a mock that returns an empty list for simple enumeration if possible,
-            // or simply use a predefined Mock helpers if they existed.
-            // Given the constraints and likely error of "Source is not IAsyncEnumerable", 
-            // I will use a helper class approach or simply Refactor the Service later. 
-            // For now, let's try to mock the repository to return a Mock DbSet or similar.
-            
-            // Actually, the easiest way for this code structure ("GetTableNoTracking") is to use the MockQueryable library, 
-            // OR simply accept that we might need to change the Service to `GetByEmailAsync` to make it testable easily.
-            // Let's assume for this step we will mock basic flow and might hit the Async issue, 
-            // but let's try to write the test structure first.
-
-            var mockSet = new Mock<DbSet<User>>();
-            // Setup async queryable (Simplified for compilation, might fail runtime without specific Async Providers)
-            
-            _mockUserRepository.Setup(x => x.GetTableNoTracking()).Returns(MockDbSet(users));
+            SetupRepositoryData(new List<User>()); // Empty DB
+            _mockPasswordHasher.Setup(x => x.HashPassword(request.Password)).Returns("hashed_password");
 
             // Act
             var response = await _authService.RegisterAsync(request);
@@ -100,113 +145,169 @@ namespace TargetSocialApp.Tests.Features.Auth
             _mockUnitOfWork.Verify(x => x.CompleteAsync(), Times.Once);
         }
 
-        // Helper to mock IQueryable/DbSet for Async usage (Simplified version)
-        // In real world, we'd bring in a library like MockQueryable.Moq
-        private DbSet<T> MockDbSet<T>(IQueryable<T> data) where T : class
+        [Fact]
+        public async Task Register_ShouldReturnFailure_WhenEmailExists()
         {
-            var mockSet = new Mock<DbSet<T>>();
-            mockSet.As<IQueryable<T>>().Setup(m => m.Provider).Returns(new TestAsyncQueryProvider<T>(data.Provider));
-            mockSet.As<IQueryable<T>>().Setup(m => m.Expression).Returns(data.Expression);
-            mockSet.As<IQueryable<T>>().Setup(m => m.ElementType).Returns(data.ElementType);
-            mockSet.As<IQueryable<T>>().Setup(m => m.GetEnumerator()).Returns(data.GetEnumerator());
-            // Async enumerator setup omitted for brevity in this initial file write
-            return mockSet.Object;
+            // Arrange
+            var request = new RegisterRequest { Email = "existing@example.com", Password = "Password123!" };
+            SetupRepositoryData(new List<User> { new User { FirstName = "User", LastName = "One", Email = "existing@example.com", PasswordHash = "hashed" } });
+
+            // Act
+            var response = await _authService.RegisterAsync(request);
+
+            // Assert
+            response.Succeeded.Should().BeFalse();
+            response.Message.Should().Contain("Email already exists");
+            _mockUserRepository.Verify(x => x.AddAsync(It.IsAny<User>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task Login_ShouldReturnSuccess_WhenCredentialsAreValid()
+        {
+            // Arrange
+            var request = new LoginRequest { Email = "test@example.com", Password = "Password123!" };
+            var user = new User { Id = 1, FirstName = "Test", LastName = "User", Email = "test@example.com", PasswordHash = "hashed_password" };
+            SetupRepositoryData(new List<User> { user });
+
+            _mockPasswordHasher.Setup(x => x.VerifyPassword(request.Password, user.PasswordHash)).Returns(true);
+            _mockTokenService.Setup(x => x.GenerateTokensAsync(user)).ReturnsAsync(new AuthResponse { AccessToken = "token", RefreshToken = "refresh" });
+
+            // Act
+            var response = await _authService.LoginAsync(request);
+
+            // Assert
+            response.Succeeded.Should().BeTrue();
+            response.Data.AccessToken.Should().Be("token");
+        }
+
+        [Fact]
+        public async Task Login_ShouldReturnFailure_WhenUserNotFound()
+        {
+            // Arrange
+            var request = new LoginRequest { Email = "unknown@example.com", Password = "Password123!" };
+            SetupRepositoryData(new List<User>());
+
+            // Act
+            var response = await _authService.LoginAsync(request);
+
+            // Assert
+            response.Succeeded.Should().BeFalse();
+            response.Message.Should().Be("Invalid credentials");
+        }
+
+        [Fact]
+        public async Task Login_ShouldReturnFailure_WhenPasswordIsInvalid()
+        {
+            // Arrange
+            var request = new LoginRequest { Email = "test@example.com", Password = "WrongPassword" };
+            var user = new User { FirstName = "Test", LastName = "User", Email = "test@example.com", PasswordHash = "hashed_password" };
+            SetupRepositoryData(new List<User> { user });
+
+            _mockPasswordHasher.Setup(x => x.VerifyPassword(request.Password, user.PasswordHash)).Returns(false);
+
+            // Act
+            var response = await _authService.LoginAsync(request);
+
+            // Assert
+            response.Succeeded.Should().BeFalse();
+            response.Message.Should().Be("Invalid credentials");
+        }
+
+        [Fact]
+        public async Task RequestOtp_ShouldReturnSuccess_WhenNewRequest()
+        {
+            // Arrange
+            var request = new OtpRequest { PhoneNumber = "+1234567890", Channel = "sms" };
+            object attemptsObj = null;
+            _mockCache.Setup(mc => mc.TryGetValue(It.IsAny<object>(), out attemptsObj)).Returns(false);
+            
+            var mockCacheEntry = new Mock<ICacheEntry>();
+            _mockCache.Setup(mc => mc.CreateEntry(It.IsAny<object>())).Returns(mockCacheEntry.Object);
+
+            _mockSmsService.Setup(x => x.SendVerificationAsync(request.PhoneNumber, request.Channel))
+                .ReturnsAsync((true, "pending"));
+
+            // Act
+            var response = await _authService.RequestOtpAsync(request);
+
+            // Assert
+            response.Succeeded.Should().BeTrue();
+            response.Data.Should().Be("pending");
+        }
+
+        [Fact]
+        public async Task RequestOtp_ShouldReturnFailure_WhenRateLimited()
+        {
+            // Arrange
+            var request = new OtpRequest { PhoneNumber = "+1234567890" };
+            object attemptsObj = 3;
+            _mockCache.Setup(mc => mc.TryGetValue(It.IsAny<object>(), out attemptsObj)).Returns(true);
+
+            // Act
+            var response = await _authService.RequestOtpAsync(request);
+
+            // Assert
+            response.Succeeded.Should().BeFalse();
+            response.Message.Should().Contain("Too many requests");
+            _mockSmsService.Verify(x => x.SendVerificationAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task VerifyOtp_ShouldReturnSuccess_WhenCodeIsValid()
+        {
+            // Arrange
+            var request = new OtpVerifyRequest { PhoneNumber = "+1234567890", Code = "123456" };
+            object attemptsObj = null;
+            _mockCache.Setup(mc => mc.TryGetValue(It.IsAny<object>(), out attemptsObj)).Returns(false);
+
+            _mockSmsService.Setup(x => x.VerifyCodeAsync(request.PhoneNumber, request.Code))
+                .ReturnsAsync((true, "approved"));
+
+            // Act
+            var response = await _authService.VerifyOtpAsync(request);
+
+            // Assert
+            response.Succeeded.Should().BeTrue();
+            response.Data.Should().Contain("Verification successful");
+        }
+
+        [Fact]
+        public async Task VerifyOtp_ShouldReturnFailure_WhenCodeIsInvalid()
+        {
+            // Arrange
+            var request = new OtpVerifyRequest { PhoneNumber = "+1234567890", Code = "000000" };
+            object attemptsObj = null;
+            _mockCache.Setup(mc => mc.TryGetValue(It.IsAny<object>(), out attemptsObj)).Returns(false);
+            var mockCacheEntry = new Mock<ICacheEntry>();
+            _mockCache.Setup(mc => mc.CreateEntry(It.IsAny<object>())).Returns(mockCacheEntry.Object);
+
+            _mockSmsService.Setup(x => x.VerifyCodeAsync(request.PhoneNumber, request.Code))
+                .ReturnsAsync((false, "Invalid code"));
+
+            // Act
+            var response = await _authService.VerifyOtpAsync(request);
+
+            // Assert
+            response.Succeeded.Should().BeFalse();
+            response.Message.Should().Be("Invalid code");
         }
     }
-    
-    // Minimal Async Query Provider to satisfy EF Core extension methods
-    internal class TestAsyncQueryProvider<TEntity> : IAsyncQueryProvider
+
+    public class AuthTestDbContext : DbContext
     {
-        private readonly IQueryProvider _inner;
+        public AuthTestDbContext(DbContextOptions options) : base(options) { }
+        public DbSet<User> Users { get; set; }
 
-        internal TestAsyncQueryProvider(IQueryProvider inner)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            _inner = inner;
-        }
-
-        public IQueryable CreateQuery(Expression expression)
-        {
-            return new TestAsyncEnumerable<TEntity>(expression);
-        }
-
-        public IQueryable<TElement> CreateQuery<TElement>(Expression expression)
-        {
-            return new TestAsyncEnumerable<TElement>(expression);
-        }
-
-        public object Execute(Expression expression)
-        {
-            return _inner.Execute(expression);
-        }
-
-        public TResult Execute<TResult>(Expression expression)
-        {
-            return _inner.Execute<TResult>(expression);
-        }
-
-        public TResult ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken = default)
-        {
-             // Detailed implementation usually needed here for ToListAsync/FirstOrDefaultAsync
-             // For now, returning default execution to see if minimal works or we need full mock
-             var resultType = typeof(TResult).GetGenericArguments()[0];
-             var executionResult = typeof(IQueryProvider)
-                 .GetMethod(
-                     name: nameof(IQueryProvider.Execute),
-                     genericParameterCount: 1,
-                     types: new[] { typeof(Expression) })
-                 .MakeGenericMethod(resultType)
-                 .Invoke(this, new[] { expression });
-
-             return (TResult)typeof(Task).GetMethod(nameof(Task.FromResult))
-                 .MakeGenericMethod(resultType)
-                 .Invoke(null, new[] { executionResult });
-        }
-    }
-
-    internal class TestAsyncEnumerable<T> : EnumerableQuery<T>, IAsyncEnumerable<T>, IQueryable<T>
-    {
-        public TestAsyncEnumerable(IEnumerable<T> enumerable)
-            : base(enumerable)
-        { }
-
-        public TestAsyncEnumerable(Expression expression)
-            : base(expression)
-        { }
-
-        public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
-        {
-            return new TestAsyncEnumerator<T>(this.AsEnumerable().GetEnumerator());
-        }
-
-        IQueryProvider IQueryable.Provider
-        {
-            get { return new TestAsyncQueryProvider<T>(this); }
-        }
-    }
-
-    internal class TestAsyncEnumerator<T> : IAsyncEnumerator<T>
-    {
-        private readonly IEnumerator<T> _inner;
-
-        public TestAsyncEnumerator(IEnumerator<T> inner)
-        {
-            _inner = inner;
-        }
-
-        public ValueTask DisposeAsync()
-        {
-            _inner.Dispose();
-            return ValueTask.CompletedTask;
-        }
-
-        public ValueTask<bool> MoveNextAsync()
-        {
-            return ValueTask.FromResult(_inner.MoveNext());
-        }
-
-        public T Current
-        {
-            get { return _inner.Current; }
+            modelBuilder.Entity<User>().Ignore(u => u.SentFriendRequests);
+            modelBuilder.Entity<User>().Ignore(u => u.ReceivedFriendRequests);
+            modelBuilder.Entity<User>().Ignore(u => u.Stories);
+            modelBuilder.Entity<User>().Ignore(u => u.UserSessions);
+            modelBuilder.Entity<User>().Ignore(u => u.PrivacySetting);
+            modelBuilder.Entity<User>().Ignore(u => u.NotificationSetting);
+            modelBuilder.Entity<User>().Ignore(u => u.Posts);
+            modelBuilder.Entity<User>().Ignore(u => u.Comments);
         }
     }
 }

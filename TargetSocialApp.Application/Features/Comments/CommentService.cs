@@ -78,6 +78,8 @@ namespace TargetSocialApp.Application.Features.Comments
         public async Task<Response<List<CommentDto>>> GetCommentRepliesAsync(int commentId)
         {
              var replies = await _commentRepository.GetTableNoTracking()
+                 .Include(c => c.User)
+                 .Include(c => c.Reactions)
                  .Where(c => c.ParentCommentId == commentId)
                  .OrderBy(c => c.CreatedAt)
                  .Select(c => new CommentDto
@@ -103,6 +105,9 @@ namespace TargetSocialApp.Application.Features.Comments
         {
              // Get top level comments only
              var comments = await _commentRepository.GetTableNoTracking()
+                 .Include(c => c.User)
+                 .Include(c => c.Replies)
+                 .Include(c => c.Reactions)
                  .Where(c => c.PostId == postId && c.ParentCommentId == null)
                  .OrderByDescending(c => c.CreatedAt) // Usually newest first or chronological? Let's stick to simple sort.
                  .Select(c => new CommentDto

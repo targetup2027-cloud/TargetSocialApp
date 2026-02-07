@@ -1,11 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "ZSe4yxGN6+Y=",
+  "dgSpecHash": "/up2L+u3194=",
   "success": true,
   "projectFilePath": "C:\\Users\\hamad\\source\\repos\\TargetSocialApp\\TargetSocialApp.API\\TargetSocialApp.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\hamad\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\hamad\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",
+    "C:\\Users\\hamad\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\hamad\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
     "C:\\Users\\hamad\\.nuget\\packages\\fluentvalidation\\12.1.1\\fluentvalidation.12.1.1.nupkg.sha512",
     "C:\\Users\\hamad\\.nuget\\packages\\fluentvalidation.dependencyinjectionextensions\\12.1.1\\fluentvalidation.dependencyinjectionextensions.12.1.1.nupkg.sha512",

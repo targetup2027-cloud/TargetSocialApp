@@ -12,17 +12,24 @@ namespace TargetSocialApp.Application.Features.Users
     {
         private readonly IGenericRepository<User> _userRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IFileService _fileService;
 
-        public UserService(IGenericRepository<User> userRepository, IUnitOfWork unitOfWork)
+        public UserService(IGenericRepository<User> userRepository, IUnitOfWork unitOfWork, IFileService fileService)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _fileService = fileService;
         }
 
         public async Task<Response<string>> DeleteAvatarAsync(int userId)
         {
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null) return Response<string>.Failure("User not found");
+            
+            if (!string.IsNullOrEmpty(user.AvatarUrl))
+            {
+                await _fileService.DeleteFileAsync(user.AvatarUrl);
+            }
             
             user.AvatarUrl = null; 
             await _userRepository.UpdateAsync(user);
@@ -46,7 +53,14 @@ namespace TargetSocialApp.Application.Features.Users
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null) return Response<string>.Failure("User not found");
 
-            var url = await UploadImageAsync(request.File, "avatars");
+            var url = await _fileService.UploadFileAsync(request.File, "avatars");
+            
+            if (!string.IsNullOrEmpty(user.AvatarUrl))
+            {
+                 // Optional: Delete old avatar
+                 // await _fileService.DeleteFileAsync(user.AvatarUrl);
+            }
+            
             user.AvatarUrl = url;
             
             await _userRepository.UpdateAsync(user);
@@ -60,7 +74,7 @@ namespace TargetSocialApp.Application.Features.Users
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null) return Response<string>.Failure("User not found");
 
-            var url = await UploadImageAsync(request.File, "covers");
+            var url = await _fileService.UploadFileAsync(request.File, "covers");
             user.CoverPhotoUrl = url;
             
             await _userRepository.UpdateAsync(user);

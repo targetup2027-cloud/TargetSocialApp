@@ -187,7 +187,6 @@ C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\System.Management.dll
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\Twilio.dll
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\runtimes\win\lib\net7.0\System.Management.dll
-C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\Microsoft.Extensions.Configuration.dll
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\Microsoft.Extensions.Configuration.Binder.dll
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\Microsoft.Extensions.Diagnostics.Abstractions.dll
@@ -207,3 +206,5 @@ C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\System.Text.Encodings.Web.dll
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
 C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\runtimes\win\lib\net9.0\System.Text.Encodings.Web.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\bin\Debug\net9.0\BCrypt.Net-Next.dll
+C:\Users\hamad\source\repos\TargetSocialApp\TargetSocialApp.API\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt

@@ -1,0 +1,9 @@
+2026-02-07 12:51:02.427 +02:00 [INF] HTTP GET /Swagger responded 301 in 13.7885 ms
+2026-02-07 12:51:02.989 +02:00 [INF] HTTP GET /Swagger/index.html responded 200 in 279.2574 ms
+2026-02-07 12:51:03.353 +02:00 [INF] HTTP GET /Swagger/index.css responded 200 in 235.6834 ms
+2026-02-07 12:51:03.519 +02:00 [INF] HTTP GET /Swagger/swagger-ui-standalone-preset.js responded 200 in 114.7191 ms
+2026-02-07 12:51:03.479 +02:00 [INF] HTTP GET /Swagger/index.js responded 200 in 1.7494 ms
+2026-02-07 12:51:03.503 +02:00 [INF] HTTP GET /Swagger/swagger-ui.css responded 200 in 385.8304 ms
+2026-02-07 12:51:03.801 +02:00 [INF] HTTP GET /Swagger/swagger-ui-bundle.js responded 200 in 424.6183 ms
+2026-02-07 12:51:05.335 +02:00 [INF] HTTP GET /Swagger/v1/swagger.json responded 200 in 161.7495 ms
+2026-02-07 12:52:14.438 +02:00 [INF] HTTP GET /Swagger/v1/swagger.json responded 200 in 100.0097 ms

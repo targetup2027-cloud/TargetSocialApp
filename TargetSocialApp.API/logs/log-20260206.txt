@@ -8,3 +8,5 @@
 2026-02-06 11:07:18.980 +02:00 [INF] HTTP GET /Swagger/favicon-32x32.png responded 200 in 3.4156 ms
 2026-02-06 11:07:19.028 +02:00 [INF] HTTP GET /Swagger/v1/swagger.json responded 200 in 147.1570 ms
 2026-02-06 11:17:40.009 +02:00 [INF] HTTP GET /Swagger/v1/swagger.json responded 200 in 35.9357 ms
+2026-02-06 11:28:15.391 +02:00 [INF] HTTP GET /Swagger/v1/swagger.json responded 200 in 45.6598 ms
+2026-02-06 11:28:23.114 +02:00 [INF] HTTP GET /api/Conversations responded 200 in 3361.5469 ms

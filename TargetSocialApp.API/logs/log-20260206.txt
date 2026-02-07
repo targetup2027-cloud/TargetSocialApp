@@ -1,0 +1,12 @@
+2026-02-06 11:07:16.630 +02:00 [INF] HTTP GET /Swagger responded 301 in 75.9566 ms
+2026-02-06 11:07:17.365 +02:00 [INF] HTTP GET /Swagger/index.html responded 200 in 232.0873 ms
+2026-02-06 11:07:17.625 +02:00 [INF] HTTP GET /Swagger/index.js responded 200 in 127.7093 ms
+2026-02-06 11:07:17.836 +02:00 [INF] HTTP GET /Swagger/swagger-ui-standalone-preset.js responded 200 in 340.0404 ms
+2026-02-06 11:07:17.663 +02:00 [INF] HTTP GET /Swagger/index.css responded 200 in 166.4639 ms
+2026-02-06 11:07:17.875 +02:00 [INF] HTTP GET /Swagger/swagger-ui-bundle.js responded 200 in 378.0768 ms
+2026-02-06 11:07:17.838 +02:00 [INF] HTTP GET /Swagger/swagger-ui.css responded 200 in 342.0741 ms
+2026-02-06 11:07:18.980 +02:00 [INF] HTTP GET /Swagger/favicon-32x32.png responded 200 in 3.4156 ms
+2026-02-06 11:07:19.028 +02:00 [INF] HTTP GET /Swagger/v1/swagger.json responded 200 in 147.1570 ms
+2026-02-06 11:17:40.009 +02:00 [INF] HTTP GET /Swagger/v1/swagger.json responded 200 in 35.9357 ms
+2026-02-06 11:28:15.391 +02:00 [INF] HTTP GET /Swagger/v1/swagger.json responded 200 in 45.6598 ms
+2026-02-06 11:28:23.114 +02:00 [INF] HTTP GET /api/Conversations responded 200 in 3361.5469 ms
